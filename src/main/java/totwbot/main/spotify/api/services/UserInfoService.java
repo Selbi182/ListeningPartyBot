@@ -6,10 +6,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.wrapper.spotify.SpotifyApi;
-import com.wrapper.spotify.enums.ModelObjectType;
-import com.wrapper.spotify.model_objects.specification.Artist;
-
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.enums.ModelObjectType;
+import se.michaelthelin.spotify.model_objects.specification.Artist;
 import totwbot.main.spotify.api.SpotifyCall;
 import totwbot.main.spotify.util.BotLogger;
 import totwbot.main.spotify.util.BotUtils;

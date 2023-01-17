@@ -1,11 +1,13 @@
 package totwbot.main.party;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -15,9 +17,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.wrapper.spotify.SpotifyApi;
-import com.wrapper.spotify.model_objects.specification.Track;
-
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.model_objects.specification.Track;
 import totwbot.main.lastfm.LastFmDataHandler;
 import totwbot.main.lastfm.LastFmTotwData;
 import totwbot.main.playlist.TotwDataHandler;
@@ -125,9 +126,13 @@ public class TotwPartyHandler {
       if (nextSong != null) {
         nextSongRunnable = createRunnableForSong(nextSong);
       } else {
-        nextSongRunnable = () -> channel.sendMessage("**The TOTW party is over. Thanks for joining!**");
+        nextSongRunnable = () -> {
+          channel.sendMessage("**The TOTW party is over. Thanks for joining!**");
+          this.started = false;
+        };
       }
-      threadPool.schedule(nextSongRunnable, track.getDurationMs(), TimeUnit.MILLISECONDS);
+//      threadPool.schedule(nextSongRunnable, track.getDurationMs(), TimeUnit.MILLISECONDS);
+      threadPool.schedule(nextSongRunnable, 2, TimeUnit.SECONDS);
     };
   }
 
@@ -141,32 +146,43 @@ public class TotwPartyHandler {
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
 
-    // "Subbed by: [entered name] ([last.fm scrobble count] scrobbles])
+    // "Subbed by: [entered name]
     // -> link to last.fm profile
     // -> with last.fm pfp
     String subbedBy = totwEntity.getName();
-    int scrobbleCount = lastFmDataForTotw.getScrobbleCount();
-    String lfmProfileLink = "https://www.last.fm/user/" + totwEntity.getLastFmName();
+    String lfmProfileLink = lastFmDataForTotw.getUserPageUrl();
     String lfmProfilePicture = lastFmDataForTotw.getProfilePictureUrl();
-    embed.setAuthor(String.format("Submitted by: %s", subbedBy), lfmProfileLink, lfmProfilePicture);
+    String authorText = String.format("Submitted by: %s", subbedBy);
+    if (lfmProfileLink != null && lfmProfilePicture != null) {
+      embed.setAuthor(authorText, lfmProfileLink, lfmProfilePicture);
+    } else {
+      embed.setAuthor(authorText);
+    }
 
     // "[Artist] – [Title] ([song:length])
     // -> Link to last.fm page
     String songArtists = BotUtils.joinArtists(track.getArtists());
     String songTitle = track.getName();
-    String songLfmLink = lastFmDataForTotw.getSongLinkUrl();
     embed.setTitle(String.format("%s – %s", songArtists, songTitle));
-    embed.setUrl(songLfmLink);
+
+    String songLfmLink = lastFmDataForTotw.getSongLinkUrl();
+    if (songLfmLink != null) {
+      embed.setUrl(songLfmLink);
+    }
 
     // Write-up
-    String writeUp = totwEntity.getWriteUp().replace("<;;;>", "\n");
-    embed.setDescription(writeUp);
+    String writeUp = Arrays.stream(totwEntity.getWriteUp().split("<;;;>"))
+        .map(s -> "> " + s)
+        .collect(Collectors.joining("\n"));
+    embed.setDescription("**Write-up:**\n" + writeUp);
 
     // Field info
     String songLength = BotUtils.formatTime(track.getDurationMs());
-    embed.addField("Total length:", songLength, true);
-    if (scrobbleCount > 0) {
-      embed.addField("Total scrobble count:", String.valueOf(scrobbleCount), true);
+    embed.addField("Song length:", songLength, true);
+
+    Integer scrobbleCount = lastFmDataForTotw.getScrobbleCount();
+    if (scrobbleCount != null && scrobbleCount > 0) {
+      embed.addField("Total scrobbles:", String.valueOf(scrobbleCount), true);
     }
 
     // Full-res cover art
@@ -177,7 +193,7 @@ public class TotwPartyHandler {
     String albumArtists = BotUtils.joinArtists(track.getAlbum().getArtists());
     String albumName = track.getAlbum().getName();
     String albumReleaseYear = BotUtils.findReleaseYear(track);
-    embed.setFooter(String.format("Album: %s – %s (%s)", albumArtists, albumName, albumReleaseYear));
+    embed.setFooter(String.format("%s – %s\n(%s)", albumArtists, albumName, albumReleaseYear));
 
     // Add some finishing touches
     embed.setColor(EMBED_COLOR);

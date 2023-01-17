@@ -1,11 +1,9 @@
 package totwbot.main.spotify.api;
 
-import com.wrapper.spotify.exceptions.SpotifyWebApiException;
-
 /**
  * A general wrapper for every type of Exception related to outside requests to
  * the Spotify Web API, most commonly (but not limited to) the
- * {@link SpotifyWebApiException}.
+ * {@link se.michaelthelin.spotify.exceptions.SpotifyWebApiException}.
  *
  */
 public class BotException extends RuntimeException {

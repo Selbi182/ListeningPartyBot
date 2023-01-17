@@ -6,16 +6,14 @@ import java.util.List;
 
 import org.apache.hc.core5.http.ParseException;
 
-import com.wrapper.spotify.exceptions.detailed.NotFoundException;
-import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
-import com.wrapper.spotify.exceptions.detailed.UnauthorizedException;
-import com.wrapper.spotify.model_objects.specification.Paging;
-import com.wrapper.spotify.model_objects.specification.PagingCursorbased;
-import com.wrapper.spotify.requests.IRequest;
-import com.wrapper.spotify.requests.IRequest.Builder;
-import com.wrapper.spotify.requests.data.IPagingCursorbasedRequestBuilder;
-import com.wrapper.spotify.requests.data.IPagingRequestBuilder;
-
+import se.michaelthelin.spotify.exceptions.detailed.NotFoundException;
+import se.michaelthelin.spotify.exceptions.detailed.TooManyRequestsException;
+import se.michaelthelin.spotify.exceptions.detailed.UnauthorizedException;
+import se.michaelthelin.spotify.model_objects.specification.Paging;
+import se.michaelthelin.spotify.model_objects.specification.PagingCursorbased;
+import se.michaelthelin.spotify.requests.IRequest;
+import se.michaelthelin.spotify.requests.data.IPagingCursorbasedRequestBuilder;
+import se.michaelthelin.spotify.requests.data.IPagingRequestBuilder;
 import totwbot.main.spotify.util.BotUtils;
 
 public class SpotifyCall {
@@ -44,7 +42,7 @@ public class SpotifyCall {
 	 * @param requestBuilder the basic, unbuilt request builder
 	 * @return the single result item
 	 */
-	public static <T, BT extends Builder<T, ?>> T execute(Builder<T, BT> requestBuilder) throws BotException {
+	public static <T, BT extends IRequest.Builder<T, ?>> T execute(IRequest.Builder<T, BT> requestBuilder) throws BotException {
 		Exception finalException = null;
 
 		for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -85,7 +83,7 @@ public class SpotifyCall {
 	 * @param pagingRequestBuilder the basic, unbuilt request paging builder
 	 * @return the fully exhausted list of result items
 	 */
-	public static <T, BT extends Builder<Paging<T>, ?>> List<T> executePaging(IPagingRequestBuilder<T, BT> pagingRequestBuilder) {
+	public static <T, BT extends IRequest.Builder<Paging<T>, ?>> List<T> executePaging(IPagingRequestBuilder<T, BT> pagingRequestBuilder) {
 		List<T> resultList = new ArrayList<>();
 		Paging<T> paging = null;
 		do {
@@ -110,7 +108,7 @@ public class SpotifyCall {
 	 * @return the fully exhausted list of result items
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T, A, BT extends Builder<PagingCursorbased<T>, ?>> List<T> executePaging(IPagingCursorbasedRequestBuilder<T, A, BT> pagingRequestBuilder) {
+	public static <T, A, BT extends IRequest.Builder<PagingCursorbased<T>, ?>> List<T> executePaging(IPagingCursorbasedRequestBuilder<T, A, BT> pagingRequestBuilder) {
 		List<T> resultList = new ArrayList<>();
 		PagingCursorbased<T> paging = null;
 		do {

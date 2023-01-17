@@ -3,8 +3,8 @@ package totwbot.main.spotify.util.data;
 import java.util.Comparator;
 import java.util.List;
 
-import com.wrapper.spotify.model_objects.specification.AlbumSimplified;
-import com.wrapper.spotify.model_objects.specification.TrackSimplified;
+import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
+import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
 
 /**
  * Container class to map a simplified album by its simplified tracks

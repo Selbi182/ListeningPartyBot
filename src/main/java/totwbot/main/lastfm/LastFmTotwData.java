@@ -1,15 +1,24 @@
 package totwbot.main.lastfm;
 
 public class LastFmTotwData {
-  public static final LastFmTotwData EMPTY = new LastFmTotwData("", "", 0);
+  private String songLinkUrl;
+  private String userPageUrl;
+  private String profilePictureUrl;
+  private Integer scrobbleCount;
 
-  private final String songLinkUrl;
-  private final String profilePictureUrl;
-  private final int scrobbleCount;
-
-  public LastFmTotwData(String songLinkUrl, String profilePictureUrl, int scrobbleCount) {
+  public void setSongLinkUrl(String songLinkUrl) {
     this.songLinkUrl = songLinkUrl;
+  }
+
+  public void setUserPageUrl(String userPageUrl) {
+    this.userPageUrl = userPageUrl;
+  }
+
+  public void setProfilePictureUrl(String profilePictureUrl) {
     this.profilePictureUrl = profilePictureUrl;
+  }
+
+  public void setScrobbleCount(Integer scrobbleCount) {
     this.scrobbleCount = scrobbleCount;
   }
 
@@ -17,11 +26,15 @@ public class LastFmTotwData {
     return songLinkUrl;
   }
 
+  public String getUserPageUrl() {
+    return userPageUrl;
+  }
+
   public String getProfilePictureUrl() {
     return profilePictureUrl;
   }
 
-  public int getScrobbleCount() {
+  public Integer getScrobbleCount() {
     return scrobbleCount;
   }
 }
