@@ -1,4 +1,4 @@
-package totwbot.spotify.api.services;
+package totwbot.main.spotify.api.services;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,9 +14,9 @@ import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.enums.AlbumGroup;
 import com.wrapper.spotify.model_objects.specification.AlbumSimplified;
 
-import totwbot.spotify.api.BotException;
-import totwbot.spotify.api.SpotifyCall;
-import totwbot.spotify.config.Config;
+import totwbot.main.spotify.api.BotException;
+import totwbot.main.spotify.api.SpotifyCall;
+import totwbot.main.spotify.config.Config;
 
 @Service
 public class AlbumService {

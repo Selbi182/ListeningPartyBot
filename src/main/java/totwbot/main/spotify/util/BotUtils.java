@@ -1,6 +1,7 @@
-package totwbot.spotify.util;
+package totwbot.main.spotify.util;
 
 import java.io.File;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -126,7 +127,7 @@ public final class BotUtils {
 	}
 	
 	/**
-	 * Build a readable String for a Track
+	 * Build a readable String for a LastFmTrack
 	 * 
 	 * @param as
 	 * @return
@@ -195,6 +196,35 @@ public final class BotUtils {
 		if (source != null && source.length > 0) {
 			List<T> asList = Arrays.asList(source);
 			target.addAll(asList);
+		}
+	}
+
+	/**
+	 * Find the release year of the track (which is in ISO format, so it's always the first four characters)
+	 * @param track
+	 * @return
+	 */
+	public static String findReleaseYear(Track track) {
+		if (track.getAlbum().getReleaseDate() != null) {
+			return track.getAlbum().getReleaseDate().substring(0, 4);
+		}
+		return null;
+	}
+
+	/**
+	 * Format the given time in milliseconds as mm:ss
+	 * @param timeInMs
+	 * @return
+	 */
+	public static String formatTime(long timeInMs) {
+		Duration duration = Duration.ofMillis(timeInMs);
+		long hours = duration.toHours();
+		int minutesPart = duration.toMinutesPart();
+		if (hours > 0) {
+			return String.format("%d:%02d", hours, minutesPart);
+		} else {
+			int secondsPart = duration.toSecondsPart();
+			return String.format("%d:%02d", minutesPart, secondsPart);
 		}
 	}
 }

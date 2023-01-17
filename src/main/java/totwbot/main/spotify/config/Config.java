@@ -1,4 +1,4 @@
-package totwbot.spotify.config;
+package totwbot.main.spotify.config;
 
 import java.io.FileOutputStream;
 import java.io.FileReader;

@@ -1,4 +1,4 @@
-package totwbot.spotify.api.services;
+package totwbot.main.spotify.api.services;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,9 +10,9 @@ import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.enums.ModelObjectType;
 import com.wrapper.spotify.model_objects.specification.Artist;
 
-import totwbot.spotify.api.SpotifyCall;
-import totwbot.spotify.util.BotLogger;
-import totwbot.spotify.util.BotUtils;
+import totwbot.main.spotify.api.SpotifyCall;
+import totwbot.main.spotify.util.BotLogger;
+import totwbot.main.spotify.util.BotUtils;
 
 @Service
 public class UserInfoService {

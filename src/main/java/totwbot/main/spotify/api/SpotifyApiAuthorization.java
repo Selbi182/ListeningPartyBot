@@ -1,4 +1,4 @@
-package totwbot.spotify.api;
+package totwbot.main.spotify.api;
 
 import java.awt.Desktop;
 import java.awt.HeadlessException;
@@ -27,9 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 
-import totwbot.spotify.api.events.LoggedInEvent;
-import totwbot.spotify.config.Config;
-import totwbot.spotify.util.BotLogger;
+import totwbot.main.spotify.api.events.LoggedInEvent;
+import totwbot.main.spotify.config.Config;
+import totwbot.main.spotify.util.BotLogger;
 
 @Component
 @RestController

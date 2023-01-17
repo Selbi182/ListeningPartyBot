@@ -1,4 +1,4 @@
-package totwbot.spotify.util.data;
+package totwbot.main.spotify.util.data;
 
 import java.util.Comparator;
 import java.util.List;

@@ -1,4 +1,4 @@
-package totwbot.spotify.api.services;
+package totwbot.main.spotify.api.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,9 +12,9 @@ import com.wrapper.spotify.model_objects.specification.AlbumSimplified;
 import com.wrapper.spotify.model_objects.specification.AudioFeatures;
 import com.wrapper.spotify.model_objects.specification.TrackSimplified;
 
-import totwbot.spotify.api.SpotifyCall;
-import totwbot.spotify.util.BotLogger;
-import totwbot.spotify.util.data.AlbumTrackPair;
+import totwbot.main.spotify.api.SpotifyCall;
+import totwbot.main.spotify.util.BotLogger;
+import totwbot.main.spotify.util.data.AlbumTrackPair;
 
 @Service
 public class TrackService {

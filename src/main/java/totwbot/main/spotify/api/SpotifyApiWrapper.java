@@ -1,4 +1,4 @@
-package totwbot.spotify.api;
+package totwbot.main.spotify.api;
 
 import java.net.URI;
 
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 
-import totwbot.spotify.config.Config;
+import totwbot.main.spotify.config.Config;
 
 @Configuration
 public class SpotifyApiWrapper {

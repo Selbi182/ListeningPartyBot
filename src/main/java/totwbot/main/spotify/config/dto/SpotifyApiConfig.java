@@ -1,4 +1,4 @@
-package totwbot.spotify.config.dto;
+package totwbot.main.spotify.config.dto;
 
 import com.neovisionaries.i18n.CountryCode;
 

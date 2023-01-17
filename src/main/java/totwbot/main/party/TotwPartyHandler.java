@@ -18,16 +18,20 @@ import org.springframework.stereotype.Component;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.model_objects.specification.Track;
 
+import totwbot.main.lastfm.LastFmDataHandler;
+import totwbot.main.lastfm.LastFmTotwData;
 import totwbot.main.playlist.TotwDataHandler;
 import totwbot.main.playlist.TotwEntity;
-import totwbot.spotify.api.SpotifyCall;
-import totwbot.spotify.util.BotUtils;
+import totwbot.main.spotify.api.SpotifyCall;
+import totwbot.main.spotify.util.BotUtils;
 
 @Component
 public class TotwPartyHandler {
 
   private final int COUNTDOWN_INTERVAL_MS = 1500;
-  private final int COUNTDOWN_SECONDS = 8;
+  private final int COUNTDOWN_SECONDS = 1;
+
+  private final Color EMBED_COLOR = new Color(173, 20, 87);
 
   private boolean started = false;
   private TextChannel channel;
@@ -40,6 +44,9 @@ public class TotwPartyHandler {
 
   @Autowired
   private TotwDataHandler totwDataHandler;
+
+  @Autowired
+  private LastFmDataHandler lastFmDataHandler;
 
   @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
@@ -110,17 +117,9 @@ public class TotwPartyHandler {
 
   private Runnable createRunnableForSong(TotwEntity totwEntity) {
     return () -> {
-      Track track = SpotifyCall.execute(spotifyApi.getTrack(totwEntity.getSongId()));
+      Track track = sendDiscordEmbedToChannel(totwEntity);
 
-      // TODO make the embed nicer. see https://discordjs.guide/popular-topics/embeds.html#using-the-embed-constructor
-      EmbedBuilder replyEmbed = new EmbedBuilder();
-      replyEmbed.setTitle(totwEntity.getName());
-      replyEmbed.setDescription(totwEntity.getWriteUp().replace(";", "\n"));
-      replyEmbed.setImage(track.getAlbum().getImages()[0].getUrl());
-      replyEmbed.setFooter(BotUtils.joinArtists(track.getArtists()) + " – " + track.getName());
-      replyEmbed.setColor(new Color(173, 20, 87));
-      channel.sendMessage(replyEmbed);
-
+      // Prepare the next song in the queue
       TotwEntity nextSong = totwQueue.poll();
       Runnable nextSongRunnable;
       if (nextSong != null) {
@@ -130,6 +129,62 @@ public class TotwPartyHandler {
       }
       threadPool.schedule(nextSongRunnable, track.getDurationMs(), TimeUnit.MILLISECONDS);
     };
+  }
+
+  private Track sendDiscordEmbedToChannel(TotwEntity totwEntity) {
+    // Fetch the song information from Spotify's API
+    Track track = SpotifyCall.execute(spotifyApi.getTrack(totwEntity.getSongId()));
+
+    // Fetch the subber's last.fm additional data required to display everything properly
+    LastFmTotwData lastFmDataForTotw = lastFmDataHandler.getLastFmDataForTotw(totwEntity.getLastFmName(), track);
+
+    // Prepare a new Discord embed
+    EmbedBuilder embed = new EmbedBuilder();
+
+    // "Subbed by: [entered name] ([last.fm scrobble count] scrobbles])
+    // -> link to last.fm profile
+    // -> with last.fm pfp
+    String subbedBy = totwEntity.getName();
+    int scrobbleCount = lastFmDataForTotw.getScrobbleCount();
+    String lfmProfileLink = "https://www.last.fm/user/" + totwEntity.getLastFmName();
+    String lfmProfilePicture = lastFmDataForTotw.getProfilePictureUrl();
+    embed.setAuthor(String.format("Submitted by: %s", subbedBy), lfmProfileLink, lfmProfilePicture);
+
+    // "[Artist] – [Title] ([song:length])
+    // -> Link to last.fm page
+    String songArtists = BotUtils.joinArtists(track.getArtists());
+    String songTitle = track.getName();
+    String songLfmLink = lastFmDataForTotw.getSongLinkUrl();
+    embed.setTitle(String.format("%s – %s", songArtists, songTitle));
+    embed.setUrl(songLfmLink);
+
+    // Write-up
+    String writeUp = totwEntity.getWriteUp().replace("<;;;>", "\n");
+    embed.setDescription(writeUp);
+
+    // Field info
+    String songLength = BotUtils.formatTime(track.getDurationMs());
+    embed.addField("Total length:", songLength, true);
+    if (scrobbleCount > 0) {
+      embed.addField("Total scrobble count:", String.valueOf(scrobbleCount), true);
+    }
+
+    // Full-res cover art
+    String imageUrl = track.getAlbum().getImages()[0].getUrl();
+    embed.setImage(imageUrl);
+
+    // "Album: [Artist] – [Album] ([Release year])
+    String albumArtists = BotUtils.joinArtists(track.getAlbum().getArtists());
+    String albumName = track.getAlbum().getName();
+    String albumReleaseYear = BotUtils.findReleaseYear(track);
+    embed.setFooter(String.format("Album: %s – %s (%s)", albumArtists, albumName, albumReleaseYear));
+
+    // Add some finishing touches
+    embed.setColor(EMBED_COLOR);
+
+    // Send off the embed to the Discord channel
+    channel.sendMessage(embed);
+    return track;
   }
 
   public static class CountdownFinishedEvent extends ApplicationEvent {

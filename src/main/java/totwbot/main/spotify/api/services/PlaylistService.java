@@ -1,22 +1,18 @@
-package totwbot.spotify.api.services;
+package totwbot.main.spotify.api.services;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.model_objects.specification.Playlist;
 import com.wrapper.spotify.model_objects.specification.PlaylistTrack;
-import com.wrapper.spotify.model_objects.specification.Track;
 
-import totwbot.spotify.api.BotException;
-import totwbot.spotify.api.SpotifyCall;
-import totwbot.spotify.util.BotUtils;
+import totwbot.main.spotify.api.BotException;
+import totwbot.main.spotify.api.SpotifyCall;
 
 @Service
 public class PlaylistService {

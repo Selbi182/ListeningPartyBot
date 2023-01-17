@@ -1,4 +1,4 @@
-package totwbot.spotify.util;
+package totwbot.main.spotify.util;
 
 import java.io.BufferedWriter;
 import java.io.File;

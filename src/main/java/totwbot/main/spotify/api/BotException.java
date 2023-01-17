@@ -1,4 +1,4 @@
-package totwbot.spotify.api;
+package totwbot.main.spotify.api;
 
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 

@@ -1,4 +1,4 @@
-package totwbot.spotify.api;
+package totwbot.main.spotify.api;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import com.wrapper.spotify.requests.IRequest.Builder;
 import com.wrapper.spotify.requests.data.IPagingCursorbasedRequestBuilder;
 import com.wrapper.spotify.requests.data.IPagingRequestBuilder;
 
-import totwbot.spotify.util.BotUtils;
+import totwbot.main.spotify.util.BotUtils;
 
 public class SpotifyCall {
 

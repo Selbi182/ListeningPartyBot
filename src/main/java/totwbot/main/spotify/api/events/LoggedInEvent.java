@@ -1,4 +1,4 @@
-package totwbot.spotify.api.events;
+package totwbot.main.spotify.api.events;
 
 import org.springframework.context.ApplicationEvent;
 

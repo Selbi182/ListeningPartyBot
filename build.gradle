@@ -35,6 +35,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'de.u-mass:lastfm-java:0.1.2'
+
     implementation 'org.javacord:javacord:3.7.0'
     implementation('se.michaelthelin.spotify:spotify-web-api-java:6.5.4')
 

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.io.Files;
 
-import totwbot.spotify.api.events.LoggedInEvent;
+import totwbot.main.spotify.api.events.LoggedInEvent;
 
 @Component
 public class DiscordLogin {
@@ -40,8 +40,9 @@ public class DiscordLogin {
       api.addMessageCreateListener(totwEventHandler::processMessage);
       LOGGER.info("Successfully connected TotwBot to Discord!");
     } catch (Exception e) {
-      LOGGER.error("Failed to start bot! Terminating...");
+      LOGGER.error("Failed to start bot! (Couldn't read Discord token.) Terminating...");
       e.printStackTrace();
+      System.exit(1);
     }
   }
 
