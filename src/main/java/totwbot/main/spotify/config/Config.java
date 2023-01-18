@@ -89,7 +89,7 @@ public class Config {
 		return config;
 	}
 
-	public class SpotifyBotConfig {
+	public static class SpotifyBotConfig {
 		private String clientId;
 		private String clientSecret;
 		private String accessToken;

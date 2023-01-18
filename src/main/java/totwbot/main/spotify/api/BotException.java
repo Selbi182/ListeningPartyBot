@@ -9,7 +9,7 @@ package totwbot.main.spotify.api;
 public class BotException extends RuntimeException {
 	private static final long serialVersionUID = 2306804985486380794L;
 
-	private Exception baseException;
+	private final Exception baseException;
 
 	public BotException(Exception e) {
 		e.printStackTrace();

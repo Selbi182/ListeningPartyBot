@@ -37,9 +37,7 @@ public class TrackService {
 	 */
 	public List<AlbumTrackPair> getTracksOfAlbums(List<AlbumSimplified> albums) {
 		List<AlbumTrackPair> atps = new ArrayList<>();
-		albums.parallelStream().forEach(a -> {
-			atps.add(getTracksOfSingleAlbum(a));
-		});
+		albums.parallelStream().forEach(a -> atps.add(getTracksOfSingleAlbum(a)));
 		return atps;
 	}
 

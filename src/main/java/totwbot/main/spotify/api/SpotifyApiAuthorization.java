@@ -60,7 +60,7 @@ public class SpotifyApiAuthorization {
 	/////////////////////
 
 	@EventListener(ApplicationReadyEvent.class)
-	private void initialLogin() {
+	public void initialLogin() {
 		refresh();
 		applicationEventPublisher.publishEvent(new LoggedInEvent(this));
 	}
@@ -80,7 +80,7 @@ public class SpotifyApiAuthorization {
 	/**
 	 * Authentication mutex to be used while the user is being prompted to log in
 	 */
-	private static Semaphore lock = new Semaphore(0);
+	private static final Semaphore lock = new Semaphore(0);
 
 	/**
 	 * Authentication process
@@ -119,7 +119,7 @@ public class SpotifyApiAuthorization {
 		AuthorizationCodeCredentials acc = SpotifyCall.execute(spotifyApi.authorizationCode(code));
 		updateTokens(acc);
 		lock.release();
-		return new ResponseEntity<String>("Successfully logged in!", HttpStatus.OK);
+		return new ResponseEntity<>("Successfully logged in!", HttpStatus.OK);
 	}
 
 	///////////////////////

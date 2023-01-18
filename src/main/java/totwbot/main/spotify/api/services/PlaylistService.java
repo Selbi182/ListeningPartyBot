@@ -88,8 +88,9 @@ public class PlaylistService {
 		final int currentPlaylistCount = p.getTracks().getTotal();
 		if (currentPlaylistCount + songsToAddCount > PLAYLIST_SIZE_LIMIT) {
 			deleteSongsFromBottomOnLimit(playlistId, currentPlaylistCount, songsToAddCount);
+			return true;
 		}
-		return true;
+		return false;
 	}
 
 	/**

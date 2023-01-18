@@ -38,8 +38,7 @@ public class AlbumService {
 	 */
 	public List<AlbumSimplified> getAllAlbumsOfArtists(List<String> followedArtists) throws IOException {
 		Collection<AlbumGroup> enabledAlbumGroups = Arrays.asList(AlbumGroup.values());
-		List<AlbumSimplified> allAlbums = getAlbumsOfArtists(followedArtists, enabledAlbumGroups);
-		return allAlbums;
+		return getAlbumsOfArtists(followedArtists, enabledAlbumGroups);
 	}
 
 	/**
@@ -79,15 +78,12 @@ public class AlbumService {
 	 * @param artistId
 	 * @param albumGroup
 	 * @return
-	 * @throws IOException
-	 * @throws BotException
 	 */
-	private List<AlbumSimplified> getAlbumIdsOfSingleArtist(String artistId, String albumGroups) throws IOException {
-		List<AlbumSimplified> albumsOfCurrentArtist = SpotifyCall.executePaging(spotifyApi
+	private List<AlbumSimplified> getAlbumIdsOfSingleArtist(String artistId, String albumGroups) {
+		return SpotifyCall.executePaging(spotifyApi
 			.getArtistsAlbums(artistId)
 			.market(config.spotifyBotConfig().getMarket())
 			.limit(MAX_ALBUM_FETCH_LIMIT)
 			.album_type(albumGroups));
-		return albumsOfCurrentArtist;
 	}
 }

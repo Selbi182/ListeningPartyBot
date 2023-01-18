@@ -148,7 +148,10 @@ public class BotLogger {
 	private void writeToExternalLog(String message) throws IOException {
 		File logFile = new File(LOG_FILE_PATH);
 		if (!logFile.exists()) {
-			logFile.createNewFile();
+			boolean fileCreated = logFile.createNewFile();
+			if (!fileCreated) {
+				throw new IOException("Couldn't create log file");
+			}
 		}
 		String logMessage = String.format("[%s] %s", DATE_FORMAT.format(Date.from(Instant.now())), message);
 		if (logFile.canWrite()) {
@@ -180,10 +183,9 @@ public class BotLogger {
 				}
 				try {
 					List<String> logFileLines = Files.readAllLines(logFile.toPath(), StandardCharsets.UTF_8);
-					List<String> logFileLinesRecent = logFileLines.subList(Math.max(0, logFileLines.size() - limit), logFileLines.size());
-					return logFileLinesRecent;
+					return logFileLines.subList(Math.max(0, logFileLines.size() - limit), logFileLines.size());
 				} catch (IOException e) {
-					throw new IOException("Failed to read log file (malformed encoding?): " + e.toString());
+					throw new IOException("Failed to read log file (malformed encoding?): " + e);
 				}
 			} else {
 				throw new IOException("Log file is currently locked, likely because it is being written to. Try again.");

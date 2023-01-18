@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,8 +56,7 @@ public final class BotUtils {
 	public static boolean isWithinTimeoutWindow(Date baseDate, int timeoutInHours) {
 		Instant baseTime = Instant.ofEpochMilli(baseDate.getTime());
 		Instant currentTime = Instant.now();
-		boolean isWithinTimeoutWindow = currentTime.minus(timeoutInHours, ChronoUnit.HOURS).isBefore(baseTime);
-		return isWithinTimeoutWindow;
+		return currentTime.minus(timeoutInHours, ChronoUnit.HOURS).isBefore(baseTime);
 	}
 
 	/**
@@ -90,7 +90,7 @@ public final class BotUtils {
 	 * @param followedArtists
 	 */
 	public static void removeNullStrings(Collection<String> collection) {
-		collection.removeIf(e -> e == null || e.toLowerCase().equals("null"));
+		collection.removeIf(e -> e == null || e.equalsIgnoreCase("null"));
 	}
 
 	/**
@@ -99,7 +99,7 @@ public final class BotUtils {
 	 * @param collection
 	 */
 	public static void removeNulls(Collection<?> collection) {
-		collection.removeIf(e -> e == null);
+		collection.removeIf(Objects::isNull);
 	}
 
 	/**
