@@ -8,12 +8,14 @@ public class TotwEntity {
   private final String lastFmName;
   private final String spotifyLink;
   private final String writeUp;
+  private final int ordinal;
 
-  public TotwEntity(String name, String lastFmName, String spotifyLink, String writeUp) {
+  public TotwEntity(String name, String lastFmName, String spotifyLink, String writeUp, int ordinal) {
     this.name = name;
     this.lastFmName = lastFmName;
     this.spotifyLink = spotifyLink;
     this.writeUp = writeUp;
+    this.ordinal = ordinal;
   }
 
   public String getName() {
@@ -30,6 +32,10 @@ public class TotwEntity {
 
   public String getWriteUp() {
     return writeUp;
+  }
+
+  public int getOrdinal() {
+    return ordinal;
   }
 
   public String getSongId() {

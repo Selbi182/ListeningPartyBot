@@ -3,6 +3,7 @@ package totwbot.main.spotify.api;
 import java.net.URI;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,6 +16,9 @@ public class SpotifyApiWrapper {
 
 	@Autowired
 	private Config config;
+
+	@Value("${server.port}")
+	private String serverPort;
 
 	/**
 	 * Creates a SpotifyApi instance with the most common settings. A
@@ -36,7 +40,7 @@ public class SpotifyApiWrapper {
 	
 	private URI generateRedirectUri() {
 		String localhost = "http://localhost:";
-		int port = 8185; // TODO find the port automatically
+		int port = Integer.parseInt(serverPort);
 		String loginCallbackUri = SpotifyApiAuthorization.LOGIN_CALLBACK_URI;
 		return SpotifyHttpManager.makeUri(localhost + port + loginCallbackUri);
 	}

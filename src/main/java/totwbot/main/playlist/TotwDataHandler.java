@@ -26,12 +26,12 @@ public class TotwDataHandler {
 
       String spotifyLink1 = totwData.get(i + (blockSize * 2));
       String writeUp1 = totwData.get(i + (blockSize * 3));
-      TotwEntity totwEntity1 = new TotwEntity(name, lastFmName, spotifyLink1, writeUp1);
+      TotwEntity totwEntity1 = new TotwEntity(name, lastFmName, spotifyLink1, writeUp1, i + 1);
       totwEntityList1.add(totwEntity1);
 
       String spotifyLink2 = totwData.get(i + (blockSize * 4));
       String writeUp2 = totwData.get(i + (blockSize * 5));
-      TotwEntity totwEntity2 = new TotwEntity(name, lastFmName, spotifyLink2, writeUp2);
+      TotwEntity totwEntity2 = new TotwEntity(name, lastFmName, spotifyLink2, writeUp2, i + blockSize + 1);
       totwEntityList2.add(totwEntity2);
     }
 

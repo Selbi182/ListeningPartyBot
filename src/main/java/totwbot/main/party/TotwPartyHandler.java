@@ -1,20 +1,13 @@
 package totwbot.main.party;
 
 import java.awt.Color;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import se.michaelthelin.spotify.SpotifyApi;
@@ -30,7 +23,7 @@ import totwbot.main.spotify.util.BotUtils;
 public class TotwPartyHandler {
 
   private final int COUNTDOWN_INTERVAL_MS = 1500;
-  private final int COUNTDOWN_SECONDS = 1;
+  private final int COUNTDOWN_SECONDS = 10;
 
   private final Color EMBED_COLOR = new Color(173, 20, 87);
 
@@ -49,12 +42,16 @@ public class TotwPartyHandler {
   @Autowired
   private LastFmDataHandler lastFmDataHandler;
 
-  @Autowired
-  private ApplicationEventPublisher applicationEventPublisher;
+  private final Set<ScheduledFuture<?>> futures;
+
+  private Runnable nextRunnable;
+
+  private int totalSongCount;
 
   public TotwPartyHandler() {
     this.threadPool = new ScheduledThreadPoolExecutor(2);
     this.totwQueue = new LinkedList<>();
+    this.futures = new ConcurrentSkipListSet<>();
   }
 
   public boolean isStarted() {
@@ -63,9 +60,19 @@ public class TotwPartyHandler {
 
   public void start(TextChannel channel) {
     if (!started) {
-      this.started = true;
-      this.channel = channel;
-      startCountdown();
+      try {
+        this.started = true;
+        this.channel = channel;
+        totwQueue.clear();
+        List<TotwEntity> totwEntityList = totwDataHandler.getTotwEntityList();
+        totalSongCount = totwEntityList.size();
+        totwQueue.addAll(totwEntityList);
+        startCountdown();
+      } catch (Exception e) {
+        this.started = false;
+        channel.sendMessage("**Failed to start TOTW due to an internal error!**");
+        e.printStackTrace();
+      }
     } else {
       channel.sendMessage("**A TOTW party is already in progress!**");
     }
@@ -73,66 +80,93 @@ public class TotwPartyHandler {
 
   public void stop() {
     if (started) {
-      // todo stop stuff
       this.started = false;
+      cancelAllTasks();
+      channel.sendMessage("**TOTW session cancelled!**");
     } else {
-      channel.sendMessage("**There's no TOTW to stop.**");
+      channel.sendMessage("**No active TOTW session.**");
     }
+  }
+
+  public void skip() {
+    if (started && nextRunnable != null) {
+      Runnable temp = nextRunnable;
+      cancelAllTasks();
+      scheduleRunnableImmediate(temp);
+      channel.sendMessage("**Skipped!**");
+    } else {
+      channel.sendMessage("**No active TOTW session!**");
+    }
+
   }
 
   //////////////////
 
+  private void cancelAllTasks() {
+    for (ScheduledFuture<?> future : futures) {
+      future.cancel(true);
+    }
+    futures.clear();
+    nextRunnable = null;
+  }
+
   private void startCountdown() {
     channel.sendMessage("**The TOTW party begins in...**");
     Runnable countdown = createCountdown();
-    threadPool.schedule(countdown, 1, TimeUnit.SECONDS);
+    scheduleRunnableImmediate(countdown);
   }
 
   private Runnable createCountdown() {
     return () -> {
+      // Schedule first song
+      scheduleNextSong(COUNTDOWN_SECONDS * COUNTDOWN_INTERVAL_MS, TimeUnit.MILLISECONDS);
+
+      // Simulate countdown
       for (int i = COUNTDOWN_SECONDS; i > 0; i--) {
         channel.sendMessage("**" + i + "**");
         try {
           Thread.sleep(COUNTDOWN_INTERVAL_MS);
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          return;
         }
       }
       channel.sendMessage("**\uD83C\uDF89 NOW \uD83C\uDF8A**");
-      applicationEventPublisher.publishEvent(new CountdownFinishedEvent(this));
     };
+  }
+
+
+  private void scheduleRunnableImmediate(Runnable runnable) {
+    scheduleRunnableImmediate(runnable, 0, TimeUnit.SECONDS);
+  }
+
+  private void scheduleRunnableImmediate(Runnable runnable, int delay, TimeUnit unit) {
+    ScheduledFuture<?> future = threadPool.schedule(runnable, delay, unit);
+    futures.add(future);
+    nextRunnable = runnable;
   }
 
   //////////////////
 
-  @EventListener(CountdownFinishedEvent.class)
-  public void startMainParty() {
-    totwQueue.addAll(totwDataHandler.getTotwEntityList());
-
-    TotwEntity startingTrack = totwQueue.poll();
-    if (startingTrack != null) {
-      Runnable song = createRunnableForSong(startingTrack);
-      threadPool.schedule(song, 1, TimeUnit.SECONDS);
+  private void scheduleNextSong(int delay, TimeUnit unit) {
+    TotwEntity nextSong = totwQueue.poll();
+    Runnable nextSongRunnable;
+    if (nextSong != null) {
+      nextSongRunnable = createRunnableForSong(nextSong);
+    } else {
+      nextSongRunnable = () -> {
+        channel.sendMessage("**The TOTW party is over. Thanks for joining!**");
+        this.started = false;
+      };
     }
+    scheduleRunnableImmediate(nextSongRunnable, delay, unit);
   }
 
   private Runnable createRunnableForSong(TotwEntity totwEntity) {
     return () -> {
-      Track track = sendDiscordEmbedToChannel(totwEntity);
-
-      // Prepare the next song in the queue
-      TotwEntity nextSong = totwQueue.poll();
-      Runnable nextSongRunnable;
-      if (nextSong != null) {
-        nextSongRunnable = createRunnableForSong(nextSong);
-      } else {
-        nextSongRunnable = () -> {
-          channel.sendMessage("**The TOTW party is over. Thanks for joining!**");
-          this.started = false;
-        };
+      if (started) {
+        Track track = sendDiscordEmbedToChannel(totwEntity);
+        scheduleNextSong(track.getDurationMs(), TimeUnit.MILLISECONDS);
       }
-//      threadPool.schedule(nextSongRunnable, track.getDurationMs(), TimeUnit.MILLISECONDS);
-      threadPool.schedule(nextSongRunnable, 2, TimeUnit.SECONDS);
     };
   }
 
@@ -171,18 +205,23 @@ public class TotwPartyHandler {
     }
 
     // Write-up
-    String writeUp = Arrays.stream(totwEntity.getWriteUp().split("<;;;>"))
-        .map(s -> "> " + s)
-        .collect(Collectors.joining("\n"));
-    embed.setDescription("**Write-up:**\n" + writeUp);
+    if (!totwEntity.getWriteUp().isBlank()) {
+      String writeUp = Arrays.stream(totwEntity.getWriteUp().split("<;;;>"))
+              .map(s -> "> " + s)
+              .collect(Collectors.joining("\n"));
+      embed.setDescription("**Write-up:**\n" + writeUp);
+    }
 
     // Field info
+    String songOrdinal = totwEntity.getOrdinal() + " / " + totalSongCount;
+    embed.addField("TOTW Entry:", songOrdinal, true);
+
     String songLength = BotUtils.formatTime(track.getDurationMs());
-    embed.addField("Song length:", songLength, true);
+    embed.addField("Song Length:", songLength, true);
 
     Integer scrobbleCount = lastFmDataForTotw.getScrobbleCount();
     if (scrobbleCount != null && scrobbleCount > 0) {
-      embed.addField("Total scrobbles:", String.valueOf(scrobbleCount), true);
+      embed.addField("Total Scrobbles:", String.valueOf(scrobbleCount), true);
     }
 
     // Full-res cover art
@@ -201,13 +240,5 @@ public class TotwPartyHandler {
     // Send off the embed to the Discord channel
     channel.sendMessage(embed);
     return track;
-  }
-
-  public static class CountdownFinishedEvent extends ApplicationEvent {
-    private static final long serialVersionUID = 1L;
-
-    public CountdownFinishedEvent(Object source) {
-      super(source);
-    }
   }
 }
