@@ -7,7 +7,6 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import totwbot.main.discord.util.Digester;
@@ -24,16 +23,17 @@ public class DiscordMessageHandler {
 
   public final static String PREFIX = "!totw";
 
-  @Autowired
-  private TotwDataHandler totwDataHandler;
-
-  @Autowired
-  private TotwPartyHandler totwEventHandler;
-
-  @Autowired
-  private PlaylistService playlistService;
+  private final TotwDataHandler totwDataHandler;
+  private final TotwPartyHandler totwPartyHandler;
+  private final PlaylistService playlistService;
 
   private String playlistId = null;
+
+  public DiscordMessageHandler(TotwDataHandler totwDataHandler, TotwPartyHandler totwPartyHandler, PlaylistService playlistService) {
+    this.totwDataHandler = totwDataHandler;
+    this.totwPartyHandler = totwPartyHandler;
+    this.playlistService = playlistService;
+  }
 
   public void processMessage(MessageCreateEvent message) {
     if (SpamProtector.checkAuthorOkay(message.getMessageAuthor())) {
@@ -45,13 +45,13 @@ public class DiscordMessageHandler {
         String firstWord = messageDigester.shift();
         switch (firstWord) {
           case "start":
-            totwEventHandler.start(message.getChannel());
+            totwPartyHandler.start(message.getChannel());
             break;
           case "skip":
-            totwEventHandler.skip();
+            totwPartyHandler.skip();
             break;
           case "stop":
-            totwEventHandler.stop();
+            totwPartyHandler.stop();
             break;
           case "playlist":
             if (playlistId != null) {

@@ -13,7 +13,6 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.PostConstruct;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -35,22 +34,20 @@ import totwbot.main.spotify.util.BotLogger;
 public class SpotifyApiAuthorization {
 
 	protected final static String LOGIN_CALLBACK_URI = "/login-callback";
+	private final static String SCOPES = "user-library-read playlist-modify-public playlist-modify-private";
+	private final static long LOGIN_TIMEOUT = 10;
 
-	private final static String SCOPES = "user-follow-read user-library-read playlist-modify-public playlist-modify-private";
+	private final SpotifyApi spotifyApi;
+	private final Config config;
+	private final BotLogger log;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
-	private static final long LOGIN_TIMEOUT = 10;
-
-	@Autowired
-	private SpotifyApi spotifyApi;
-
-	@Autowired
-	private Config config;
-
-	@Autowired
-	private BotLogger log;
-
-	@Autowired
-	private ApplicationEventPublisher applicationEventPublisher;
+	public SpotifyApiAuthorization(SpotifyApi spotifyApi, Config config, BotLogger botLogger, ApplicationEventPublisher applicationEventPublisher) {
+		this.spotifyApi = spotifyApi;
+		this.config = config;
+		this.log = botLogger;
+		this.applicationEventPublisher = applicationEventPublisher;
+	}
 	
 	@PostConstruct
 	private void initSpotifyCall() {
@@ -84,8 +81,6 @@ public class SpotifyApiAuthorization {
 
 	/**
 	 * Authentication process
-	 * 
-	 * @param api
 	 */
 	private void authenticate() {
 		URI uri = SpotifyCall.execute(spotifyApi.authorizationCodeUri().scope(SCOPES));
@@ -99,8 +94,11 @@ public class SpotifyApiAuthorization {
 			System.out.println(uri.toString());
 		}
 		try {
-			lock.tryAcquire(LOGIN_TIMEOUT, TimeUnit.MINUTES);
-		} catch (InterruptedException e) {
+			boolean lockAcquired = lock.tryAcquire(LOGIN_TIMEOUT, TimeUnit.MINUTES);
+			if (!lockAcquired) {
+				throw new IllegalStateException("Couldn't acquired lock");
+			}
+		} catch (IllegalStateException | InterruptedException e) {
 			log.error("Login timeout! Shutting down application in case of a Spotify Web API anomaly!");
 			System.exit(1);
 		}
@@ -108,11 +106,6 @@ public class SpotifyApiAuthorization {
 
 	/**
 	 * Callback receiver for logins
-	 * 
-	 * @param code
-	 * @return
-	 * @throws BotException
-	 * @throws IOException
 	 */
 	@RequestMapping(LOGIN_CALLBACK_URI)
 	private ResponseEntity<String> loginCallback(@RequestParam String code) {
@@ -126,8 +119,6 @@ public class SpotifyApiAuthorization {
 
 	/**
 	 * Refresh the access token
-	 * 
-	 * @throws HttpConnectTimeoutException
 	 */
 	private String authorizationCodeRefresh() throws HttpConnectTimeoutException {
 		try {

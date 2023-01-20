@@ -10,7 +10,6 @@ import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.user.UserStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -22,8 +21,11 @@ import totwbot.main.spotify.api.events.LoggedInEvent;
 public class DiscordLogin {
   private static final Logger LOGGER = LoggerFactory.getLogger(DiscordLogin.class);
 
-  @Autowired
-  private DiscordMessageHandler totwEventHandler;
+  private final DiscordMessageHandler discordMessageHandler;
+
+  public DiscordLogin(DiscordMessageHandler discordMessageHandler) {
+    this.discordMessageHandler = discordMessageHandler;
+  }
 
   @EventListener(LoggedInEvent.class)
   public void start() {
@@ -37,7 +39,7 @@ public class DiscordLogin {
           .login()
           .join();
       api.updateStatus(UserStatus.ONLINE);
-      api.addMessageCreateListener(totwEventHandler::processMessage);
+      api.addMessageCreateListener(discordMessageHandler::processMessage);
       LOGGER.info("Successfully connected TotwBot to Discord!");
     } catch (Exception e) {
       LOGGER.error("Failed to start bot! (Couldn't read Discord token.) Terminating...");

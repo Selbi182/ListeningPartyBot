@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -19,12 +18,13 @@ import totwbot.main.spotify.util.BotLogger;
 @Component
 public class LastFmDataHandler {
 
-  @Autowired
-  private BotLogger log;
+  private final BotLogger log;
 
   private UriComponentsBuilder lastFmApiUrl;
 
-  public LastFmDataHandler() {
+  public LastFmDataHandler(BotLogger botLogger) {
+    this.log = botLogger;
+
     try {
       String lastFmApiToken = readToken();
       this.lastFmApiUrl = UriComponentsBuilder.newInstance()

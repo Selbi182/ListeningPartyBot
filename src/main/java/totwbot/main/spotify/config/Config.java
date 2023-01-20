@@ -34,13 +34,8 @@ public class Config {
 	}
 
 	/**
-	 * Update the access and refresh tokens, both in the config object as well as
+	 * Update the access and refresh tokens, both in the config object and
 	 * the settings
-	 * 
-	 * @param accessToken
-	 * @param refreshToken
-	 * @throws  
-	 * @throws IOException
 	 */
 	public void updateTokens(String accessToken, String refreshToken) throws IOException {
 		spotifyApiConfig.setAccessToken(accessToken);
@@ -71,9 +66,6 @@ public class Config {
 
 	/**
 	 * Returns the bot configuration. May be created if not present.
-	 * 
-	 * @return
-	 * @throws IOException
 	 */
 	@Bean
 	public SpotifyBotConfig spotifyBotConfig() {

@@ -1,13 +1,20 @@
 package totwbot.main.party;
 
 import java.awt.Color;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import se.michaelthelin.spotify.SpotifyApi;
@@ -24,38 +31,28 @@ public class TotwPartyHandler {
 
   private final int COUNTDOWN_INTERVAL_MS = 1500;
   private final int COUNTDOWN_SECONDS = 10;
-
   private final Color EMBED_COLOR = new Color(173, 20, 87);
-
-  private boolean started = false;
-  private TextChannel channel;
 
   private final ScheduledExecutorService threadPool;
   private final Queue<TotwEntity> totwQueue;
 
-  @Autowired
-  private SpotifyApi spotifyApi;
-
-  @Autowired
-  private TotwDataHandler totwDataHandler;
-
-  @Autowired
-  private LastFmDataHandler lastFmDataHandler;
+  private final SpotifyApi spotifyApi;
+  private final TotwDataHandler totwDataHandler;
+  private final LastFmDataHandler lastFmDataHandler;
 
   private final Set<ScheduledFuture<?>> futures;
-
+  private boolean started = false;
+  private TextChannel channel;
   private Runnable nextRunnable;
-
   private int totalSongCount;
 
-  public TotwPartyHandler() {
+  public TotwPartyHandler(SpotifyApi spotifyApi, TotwDataHandler totwDataHandler, LastFmDataHandler lastFmDataHandler) {
+    this.spotifyApi = spotifyApi;
+    this.totwDataHandler = totwDataHandler;
+    this.lastFmDataHandler = lastFmDataHandler;
     this.threadPool = new ScheduledThreadPoolExecutor(2);
     this.totwQueue = new LinkedList<>();
     this.futures = new ConcurrentSkipListSet<>();
-  }
-
-  public boolean isStarted() {
-    return started;
   }
 
   public void start(TextChannel channel) {
@@ -134,7 +131,6 @@ public class TotwPartyHandler {
     };
   }
 
-
   private void scheduleRunnableImmediate(Runnable runnable) {
     scheduleRunnableImmediate(runnable, 0, TimeUnit.SECONDS);
   }
@@ -207,8 +203,8 @@ public class TotwPartyHandler {
     // Write-up
     if (!totwEntity.getWriteUp().isBlank()) {
       String writeUp = Arrays.stream(totwEntity.getWriteUp().split("<;;;>"))
-              .map(s -> "> " + s)
-              .collect(Collectors.joining("\n"));
+          .map(s -> "> " + s)
+          .collect(Collectors.joining("\n"));
       embed.setDescription("**Write-up:**\n" + writeUp);
     }
 

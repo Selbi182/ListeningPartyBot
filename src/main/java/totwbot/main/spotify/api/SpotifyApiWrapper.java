@@ -2,7 +2,6 @@ package totwbot.main.spotify.api;
 
 import java.net.URI;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,16 +13,19 @@ import totwbot.main.spotify.config.Config;
 @Configuration
 public class SpotifyApiWrapper {
 
-	@Autowired
-	private Config config;
+	private final Config config;
 
 	@Value("${server.port}")
 	private String serverPort;
 
+	public SpotifyApiWrapper(Config config) {
+		this.config = config;
+	}
+
 	/**
 	 * Creates a SpotifyApi instance with the most common settings. A
 	 * preconfiguration from the settings is taken first.
-	 * 
+	 *
 	 * @return the API instance
 	 */
 	@Bean
@@ -37,7 +39,7 @@ public class SpotifyApiWrapper {
 		spotifyApi.setRefreshToken(config.spotifyBotConfig().getRefreshToken());
 		return spotifyApi;
 	}
-	
+
 	private URI generateRedirectUri() {
 		String localhost = "http://localhost:";
 		int port = Integer.parseInt(serverPort);

@@ -114,22 +114,12 @@ public class BotLogger {
 	/**
 	 * Print a line of hyphens (----) as INFO-level log message
 	 */
-	public void printLine() {
-		printLine(LINE_SYMBOL);
-	}
-
-	/**
-	 * Print a line of of the given symbol as INFO-level log message
-	 */
-	private void printLine(String lineCharacter) {
-		info(Strings.repeat(lineCharacter, MAX_LINE_LENGTH - ELLIPSIS.length()));
+	private void printLine() {
+		info(Strings.repeat(LINE_SYMBOL, MAX_LINE_LENGTH - ELLIPSIS.length()));
 	}
 
 	/**
 	 * Chop off the message if it exceeds the maximum line length of 160 characters
-	 * 
-	 * @param message
-	 * @return
 	 */
 	private String truncateToEllipsis(String message) {
 		if (message.length() <= MAX_LINE_LENGTH - ELLIPSIS.length()) {
@@ -199,8 +189,6 @@ public class BotLogger {
 
 	/**
 	 * Log and print the given exception's stack trace
-	 * 
-	 * @param e
 	 */
 	public void stackTrace(Exception e) {
 		StringWriter stringWriter = new StringWriter();

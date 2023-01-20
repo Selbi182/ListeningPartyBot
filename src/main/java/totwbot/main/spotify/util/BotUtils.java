@@ -62,8 +62,6 @@ public final class BotUtils {
 	/**
 	 * Creates a map with a full AlbumGroup -> List<T> relationship (the lists are
 	 * empty)
-	 * 
-	 * @return
 	 */
 	public static <T> Map<AlbumGroup, List<T>> createAlbumGroupToListOfTMap() {
 		Map<AlbumGroup, List<T>> albumGroupToList = new HashMap<>();
@@ -75,9 +73,6 @@ public final class BotUtils {
 
 	/**
 	 * Returns true if all mappings just contain an empty list (not null)
-	 * 
-	 * @param listsByMap
-	 * @return
 	 */
 	public static <T, K> boolean isAllEmptyLists(Map<K, List<T>> listsByMap) {
 		return listsByMap.values().stream().allMatch(List::isEmpty);
@@ -86,8 +81,6 @@ public final class BotUtils {
 	/**
 	 * Remove all items from this list that are either <i>null</i> or "null" (a
 	 * literal String)
-	 * 
-	 * @param followedArtists
 	 */
 	public static void removeNullStrings(Collection<String> collection) {
 		collection.removeIf(e -> e == null || e.equalsIgnoreCase("null"));
@@ -95,8 +88,6 @@ public final class BotUtils {
 
 	/**
 	 * Remove all items from this collection that are null
-	 * 
-	 * @param collection
 	 */
 	public static void removeNulls(Collection<?> collection) {
 		collection.removeIf(Objects::isNull);
@@ -104,8 +95,6 @@ public final class BotUtils {
 
 	/**
 	 * Return the current time as unix timestamp
-	 * 
-	 * @return
 	 */
 	public static long currentTime() {
 		Calendar cal = Calendar.getInstance();
@@ -114,9 +103,6 @@ public final class BotUtils {
 
 	/**
 	 * Build a readable String for an AlbumSimplified
-	 * 
-	 * @param as
-	 * @return
 	 */
 	public static String formatAlbum(AlbumSimplified as) {
 		return String.format("[%s] %s - %s (%s)",
@@ -128,9 +114,6 @@ public final class BotUtils {
 	
 	/**
 	 * Build a readable String for a LastFmTrack
-	 * 
-	 * @param as
-	 * @return
 	 */
 	public static String formatTrack(Track t) {
 		return String.format("%s - %s",
@@ -140,9 +123,6 @@ public final class BotUtils {
 
 	/**
 	 * Return a string representation of all artist names, separated by ", "
-	 * 
-	 * @param artists
-	 * @return
 	 */
 	public static String joinArtists(ArtistSimplified[] artists) {
 		return Stream.of(artists)
@@ -152,9 +132,6 @@ public final class BotUtils {
 
 	/**
 	 * Returns the name of the first artist of this album (usually the only one)
-	 * 
-	 * @param as
-	 * @return
 	 */
 	public static String getFirstArtistName(AlbumSimplified as) {
 		return as.getArtists()[0].getName();
@@ -162,9 +139,6 @@ public final class BotUtils {
 
 	/**
 	 * Returns the name of the last artist of this album
-	 * 
-	 * @param as
-	 * @return
 	 */
 	public static String getLastArtistName(AlbumSimplified as) {
 		return as.getArtists()[as.getArtists().length - 1].getName();
@@ -173,9 +147,6 @@ public final class BotUtils {
 	/**
 	 * Normalizes a file by converting it to a Path object, calling .normalize(),
 	 * and returning it back as file.
-	 * 
-	 * @param file
-	 * @return
 	 */
 	public static File normalizeFile(File file) {
 		if (file != null) {
@@ -201,8 +172,6 @@ public final class BotUtils {
 
 	/**
 	 * Find the release year of the track (which is in ISO format, so it's always the first four characters)
-	 * @param track
-	 * @return
 	 */
 	public static String findReleaseYear(Track track) {
 		if (track.getAlbum().getReleaseDate() != null) {
@@ -213,8 +182,6 @@ public final class BotUtils {
 
 	/**
 	 * Format the given time in milliseconds as mm:ss
-	 * @param timeInMs
-	 * @return
 	 */
 	public static String formatTime(long timeInMs) {
 		Duration duration = Duration.ofMillis(timeInMs);
