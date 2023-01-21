@@ -13,6 +13,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import se.michaelthelin.spotify.model_objects.specification.Track;
+import totwbot.main.playlist.TotwEntity;
 import totwbot.main.spotify.util.BotLogger;
 
 @Component
@@ -40,12 +41,13 @@ public class LastFmDataHandler {
     }
   }
 
-  public LastFmTotwData getLastFmDataForTotw(String lfmUserName, Track spotifyTrack) {
-    LastFmTotwData lastFmTotwData = new LastFmTotwData();
+  public TotwEntityWithLastFmData getLastFmDataForTotw(TotwEntity totwEntity, Track spotifyTrack) {
+    TotwEntityWithLastFmData lastFmTotwData = new TotwEntityWithLastFmData(totwEntity);
 
+    String lastFmName = totwEntity.getLastFmName();
     try {
       // User info
-      String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lfmUserName);
+      String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lastFmName);
       JsonObject user = executeRequest(lastFmApiUrlForUserInfo, "user");
       String userPageUrl = user.get("url").getAsString();
       lastFmTotwData.setUserPageUrl(userPageUrl);
@@ -55,7 +57,7 @@ public class LastFmDataHandler {
       // Track info
       String artistName = spotifyTrack.getArtists()[0].getName();
       String trackName = spotifyTrack.getName();
-      String url = assembleLastFmApiUrlForTrackGetInfo(lfmUserName, artistName, trackName);
+      String url = assembleLastFmApiUrlForTrackGetInfo(lastFmName, artistName, trackName);
       JsonObject jsonTrack = executeRequest(url, "track");
       String songUrl = jsonTrack.get("url").getAsString();
       lastFmTotwData.setSongLinkUrl(songUrl);
@@ -63,7 +65,7 @@ public class LastFmDataHandler {
       lastFmTotwData.setScrobbleCount(scrobbleCount);
 
     } catch (Exception e) {
-      log.error("Error during last.fm API call. Likely caused by an unknown username: " + lfmUserName);
+      log.error("Error during last.fm API call. Likely caused by an unknown username: " + lastFmName);
     }
     return lastFmTotwData;
   }

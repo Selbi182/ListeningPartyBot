@@ -1,10 +1,16 @@
 package totwbot.main.lastfm;
 
-public class LastFmTotwData {
+import totwbot.main.playlist.TotwEntity;
+
+public class TotwEntityWithLastFmData extends TotwEntity {
   private String songLinkUrl;
   private String userPageUrl;
   private String profilePictureUrl;
   private Integer scrobbleCount;
+
+  public TotwEntityWithLastFmData(TotwEntity totwEntity) {
+    super(totwEntity);
+  }
 
   public void setSongLinkUrl(String songLinkUrl) {
     this.songLinkUrl = songLinkUrl;

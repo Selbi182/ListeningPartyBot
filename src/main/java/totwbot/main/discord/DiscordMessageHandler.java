@@ -47,9 +47,6 @@ public class DiscordMessageHandler {
           case "start":
             totwPartyHandler.start(message.getChannel());
             break;
-          case "skip":
-            totwPartyHandler.skip();
-            break;
           case "stop":
             totwPartyHandler.stop();
             break;
@@ -82,7 +79,6 @@ public class DiscordMessageHandler {
             EmbedBuilder helpEmbed = new EmbedBuilder();
             helpEmbed.setTitle("Help");
             helpEmbed.addField("`!totw start`", "Start the TOTW session (beginning with a countdown)");
-            helpEmbed.addField("`!totw skip`", "Skip the current song and immediately jump to the next one in the queue");
             helpEmbed.addField("`!totw stop`", "Cancel a currently ongoing TOTW session and reset it to the beginning");
             helpEmbed.addField("`!totw playlist`", "Print the set playlist link");
             helpEmbed.addField("`!totw setplaylist`", "Set the playlist link (must be provided as pure Spotify ID).");

@@ -10,6 +10,10 @@ public class TotwEntity {
   private final String writeUp;
   private final int ordinal;
 
+  public TotwEntity(TotwEntity clone) {
+    this(clone.getName(), clone.getLastFmName(), clone.getSpotifyLink(), clone.getWriteUp(), clone.getOrdinal());
+  }
+
   public TotwEntity(String name, String lastFmName, String spotifyLink, String writeUp, int ordinal) {
     this.name = name;
     this.lastFmName = lastFmName;
