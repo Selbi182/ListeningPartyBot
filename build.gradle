@@ -17,13 +17,13 @@ apply plugin: 'org.springframework.boot.experimental.thin-launcher'
 
 
 jar {
-    baseName = 'TotwBot'
+    baseName = 'ListeningPartyBot'
     version = '1.0'
     bootJar.dependsOn = [thinProperties]
 }
 
 springBoot {
-    mainClassName = 'totwbot.TotwBot'
+    mainClassName = 'lpbot.ListeningPartyBot'
 }
 
 
