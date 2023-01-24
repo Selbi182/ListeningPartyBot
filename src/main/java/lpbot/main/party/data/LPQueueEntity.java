@@ -1,4 +1,4 @@
-package lpbot.main.party;
+package lpbot.main.party.data;
 
 public class LPQueueEntity {
   private final Runnable runnable;

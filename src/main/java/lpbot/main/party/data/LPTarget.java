@@ -1,7 +1,8 @@
-package lpbot.main.party;
+package lpbot.main.party.data;
 
 import java.util.List;
 
+import lpbot.main.party.totw.TotwEntity;
 import se.michaelthelin.spotify.model_objects.AbstractModelObject;
 import se.michaelthelin.spotify.model_objects.specification.Album;
 import se.michaelthelin.spotify.model_objects.specification.Playlist;
@@ -13,12 +14,13 @@ public class LPTarget {
     PLAYLIST
   }
 
+  private final List<Track> tracks;
   private final Type type;
 
   private Playlist playlist;
   private Album album;
 
-  private final List<Track> tracks;
+  private TotwEntity totwData;
 
   public LPTarget(AbstractModelObject abstractModelObject, List<Track> tracks) {
     if (abstractModelObject instanceof Album) {
@@ -33,14 +35,12 @@ public class LPTarget {
     this.tracks = tracks;
   }
 
-  public String getId() {
-    if (type.equals(Type.ALBUM)) {
-      return album.getId();
-    }
-    return playlist.getId();
+  public LPTarget(AbstractModelObject abstractModelObject, List<Track> tracks, TotwEntity totwData) {
+    this(abstractModelObject, tracks);
+    this.totwData = totwData;
   }
 
-  public String getUri() {
+  public String getLink() {
     if (type.equals(Type.ALBUM)) {
       return album.getExternalUrls().get("spotify");
     }
@@ -49,5 +49,9 @@ public class LPTarget {
 
   public List<Track> getTracks() {
     return tracks;
+  }
+
+  public TotwEntity getTotwData() {
+    return totwData;
   }
 }

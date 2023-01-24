@@ -16,9 +16,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.javacord.api.entity.channel.TextChannel;
+
 import se.michaelthelin.spotify.enums.AlbumGroup;
+import se.michaelthelin.spotify.model_objects.specification.Album;
 import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
+import se.michaelthelin.spotify.model_objects.specification.Image;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 public final class BotUtils {
@@ -133,8 +137,15 @@ public final class BotUtils {
 	/**
 	 * Returns the name of the first artist of this album (usually the only one)
 	 */
-	public static String getFirstArtistName(AlbumSimplified as) {
-		return as.getArtists()[0].getName();
+	public static String getFirstArtistName(Album album) {
+		return album.getArtists()[0].getName();
+	}
+
+	/**
+	 * Returns the name of the first artist of this album (usually the only one)
+	 */
+	public static String getFirstArtistName(Track track) {
+		return track.getArtists()[0].getName();
 	}
 
 	/**
@@ -193,5 +204,28 @@ public final class BotUtils {
 			int secondsPart = duration.toSecondsPart();
 			return String.format("%d:%02d", minutesPart, secondsPart);
 		}
+	}
+
+	/**
+	 * Find the largest image of a given image array
+	 */
+	public static String findLargestImage(Image[] images) {
+		if (images != null) {
+			Image largest = null;
+			for (Image img : images) {
+				if (largest == null || (img.getWidth() * img.getHeight()) > (largest.getWidth() * largest.getHeight())) {
+					largest = img;
+				}
+			}
+			return largest != null ? largest.getUrl() : null;
+		}
+		return null;
+	}
+
+	/**
+	 * Print the given message to the given channel in bold
+	 */
+	public static void sendMessage(TextChannel channel, String text) {
+		channel.sendMessage("**" + text + "**");
 	}
 }

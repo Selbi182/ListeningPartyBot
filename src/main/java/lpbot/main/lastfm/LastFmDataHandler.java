@@ -12,18 +12,23 @@ import com.google.common.io.Files;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import lpbot.main.party.totw.TotwEntity;
+import lpbot.main.spotify.api.SpotifyCall;
+import lpbot.main.spotify.util.BotUtils;
+import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Track;
-import lpbot.main.playlist.LPEntity;
 import lpbot.main.spotify.util.BotLogger;
 
 @Component
 public class LastFmDataHandler {
 
+  private final SpotifyApi spotifyApi;
   private final BotLogger log;
 
   private UriComponentsBuilder lastFmApiUrl;
 
-  public LastFmDataHandler(BotLogger botLogger) {
+  public LastFmDataHandler(SpotifyApi spotifyApi, BotLogger botLogger) {
+    this.spotifyApi = spotifyApi;
     this.log = botLogger;
 
     try {
@@ -41,10 +46,10 @@ public class LastFmDataHandler {
     }
   }
 
-  public LPEntityWithLastFmData getLastFmDataForLPEntity(LPEntity lpEntity, Track spotifyTrack) {
-    LPEntityWithLastFmData lpEntityWithLastFmData = new LPEntityWithLastFmData(lpEntity);
+  public TotwEntity.Full attachLastFmData(TotwEntity.Partial totwEntity) {
+    TotwEntity.Full lpEntityWithLastFmData = new TotwEntity.Full(totwEntity);
 
-    String lastFmName = lpEntity.getLastFmName();
+    String lastFmName = totwEntity.getLastFmName();
     try {
       // User info
       String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lastFmName);
@@ -55,7 +60,8 @@ public class LastFmDataHandler {
       lpEntityWithLastFmData.setProfilePictureUrl(userImageUrl);
 
       // Track info
-      String artistName = spotifyTrack.getArtists()[0].getName();
+      Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntity.getSongId()));
+      String artistName = BotUtils.getFirstArtistName(spotifyTrack);
       String trackName = spotifyTrack.getName();
       String url = assembleLastFmApiUrlForTrackGetInfo(lastFmName, artistName, trackName);
       JsonObject jsonTrack = executeRequest(url, "track");
