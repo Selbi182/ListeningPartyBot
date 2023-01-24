@@ -1,7 +1,6 @@
 package lpbot.main.discord;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -12,10 +11,8 @@ import org.springframework.stereotype.Component;
 
 import lpbot.main.discord.util.Digester;
 import lpbot.main.discord.util.SpamProtector;
-import lpbot.main.party.LPHandler;
-import lpbot.main.playlist.TotwDataHandler;
-import lpbot.main.playlist.LPEntity;
-import lpbot.main.spotify.api.services.PlaylistService;
+import lpbot.main.party.LPChannelRegistry;
+import lpbot.main.party.LPInstance;
 
 @Component
 public class DiscordMessageHandler {
@@ -24,81 +21,111 @@ public class DiscordMessageHandler {
 
   public final static String PREFIX = "!lp";
 
-  private final TotwDataHandler lpDataHandler;
-  private final LPHandler lpPartyHandler;
+  private final LPChannelRegistry lpChannelRegistry;
 
-  public DiscordMessageHandler(TotwDataHandler lpDataHandler, LPHandler lpPartyHandler) {
-    this.lpDataHandler = lpDataHandler;
-    this.lpPartyHandler = lpPartyHandler;
+  public DiscordMessageHandler(LPChannelRegistry lpChannelRegistry) {
+     this.lpChannelRegistry = lpChannelRegistry;
   }
 
   public void processMessage(MessageCreateEvent message) {
-    // TODO multi-channel support for multiple sessions at once. Session is linked to channel (stored via HashMap). Only the starter of the playlist has the ability to stop it
     if (SpamProtector.checkAuthorOkay(message.getMessageAuthor())) {
       String content = message.getMessageContent();
       if (content.startsWith(PREFIX)) {
         LOGGER.debug("New potential message received: " + content);
 
         TextChannel channel = message.getChannel();
+        Optional<LPInstance> lpInstance = lpChannelRegistry.getExistingLPInstance(channel);
+
         Digester messageDigester = new Digester(content.substring(PREFIX.length()));
         String firstWord = messageDigester.shift();
         switch (firstWord) {
-          case "start":
-            lpPartyHandler.start(channel);
-            break;
-          case "stop":
-            lpPartyHandler.stop(channel);
-            break;
-          case "pause":
-            lpPartyHandler.pause(channel);
-            break;
-          case "resume":
-            lpPartyHandler.resume(channel);
-            break;
-          case "link":
-            String linkForChannel = lpPartyHandler.getLinkForChannel(channel);
-            if (linkForChannel != null) {
-              channel.sendMessage(linkForChannel);
-            } else {
-              channel.sendMessage("**There's currently no link set for this channel! Use `!lp set <link>` to set it**");
-            }
-            break;
+          // LPInstance setup
           case "set":
             String potentialPlaylist = messageDigester.shift();
             if (potentialPlaylist != null && !potentialPlaylist.isBlank()) {
-              boolean success = lpPartyHandler.setLink(potentialPlaylist);
-              if (success) {
-                channel.sendMessage("Listening Party link set! Use `!lp start` to begin the session");
+              LPInstance registeredInstance = lpChannelRegistry.register(channel, potentialPlaylist);
+              if (registeredInstance != null) {
+                sendMessage(channel, "Listening Party link set! Use `!lp start` to begin the session");
+              } else {
+                sendMessage(channel, "ERROR: Invalid Spotify album/playlist ID or a Listening Party is currently in progress!");
+              }
+            } else {
+              sendMessage(channel, "Usage: `!lp set <link>` (Spotify album or playlist)");
+            }
+            break;
+
+          case "link":
+            lpInstance.ifPresentOrElse((lp) -> sendMessage(channel, lp.getAlbumOrPlaylistUri()), () -> sendGenericUnsetError(channel));
+            break;
+
+          // LPInstance control
+          case "start":
+            int countdown = 10;
+            String customCountdownSeconds = messageDigester.shift();
+            if (customCountdownSeconds != null && !customCountdownSeconds.isBlank()) {
+              try {
+                countdown = Integer.parseInt(customCountdownSeconds);
+                if (countdown < 1) {
+                  throw new NumberFormatException();
+                }
+              } catch (NumberFormatException e) {
+                sendMessage(channel, customCountdownSeconds + " isn't a valid positive number");
                 return;
               }
             }
-            channel.sendMessage("Usage: `!lp set <link>` (Spotify album or playlist)");
+            final int finalCountdown = countdown;
+            lpInstance.ifPresentOrElse(lp -> lp.start(finalCountdown), () -> sendGenericUnsetError(channel));
             break;
-          case "totw":
-            // TODO totw
-//            int updatedSongCount = createOrRefreshListeningPartyPlaylist();
-//            message.getChannel().sendMessage("LP playlist updated! New song count: " + updatedSongCount);
+          case "stop":
+            lpInstance.ifPresentOrElse(lp -> {
+              lp.stop();
+              sendMessage(channel, "**Listening Party cancelled!**");
+            }, () -> sendGenericUnsetError(channel));
             break;
+
+//          case "totw":
+//            // TODO totw
+////            int updatedSongCount = createOrRefreshListeningPartyPlaylist();
+////            message.getChannel().sendMessage("LP playlist updated! New song count: " + updatedSongCount);
+//            break;
+
+          // Other
           case "help":
-            // TODO update help (perhaps autogenerate)
-            EmbedBuilder helpEmbed = new EmbedBuilder();
-            helpEmbed.setTitle("Listening Party Bot - Help");
-            helpEmbed.addField("`!lp start`", "Start the Listening Party (beginning with a countdown)");
-            helpEmbed.addField("`!lp stop`", "Cancel a currently ongoing Listening Party and reset it to the beginning");
-            helpEmbed.addField("`!lp playlist`", "Print the set playlist link");
-            helpEmbed.addField("`!lp setplaylist`", "Set the playlist link (must be provided as pure Spotify ID)");
-            helpEmbed.addField("`!lp refreshplaylist`", "Refresh the Spotify playlist with the current Google Forms data (requires a valid playlist link to be set)");
-            helpEmbed.addField("`!lp help`", "Display this page");
-            channel.sendMessage(helpEmbed);
+            sendHelpEmbed(channel);
             break;
           default:
-            EmbedBuilder basicUsageEmbed = new EmbedBuilder();
-            basicUsageEmbed.setTitle("Usage");
-            basicUsageEmbed.setDescription("`!lp <command>`\n\nSee `!lp help` for more information");
-            channel.sendMessage(basicUsageEmbed);
+            sendBasicUsageEmbed(channel);
             break;
         }
       }
     }
+  }
+
+  private void sendGenericUnsetError(TextChannel channel) {
+    channel.sendMessage("**There's currently no link set for this channel! Use `!lp set <link>` to set it**");
+  }
+
+  private void sendMessage(TextChannel channel, String text) {
+    channel.sendMessage("**" + text + "**");
+  }
+
+  private void sendHelpEmbed(TextChannel channel) {
+    // TODO update help (perhaps autogenerate)
+    EmbedBuilder helpEmbed = new EmbedBuilder();
+    helpEmbed.setTitle("Listening Party Bot - Help");
+    helpEmbed.addField("`!lp start <countdown>`", "Start the Listening Party (`countdown` can be set manually in seconds, defaults to 10");
+    helpEmbed.addField("`!lp stop`", "Cancel a currently ongoing Listening Party and reset it to the beginning");
+    helpEmbed.addField("`!lp playlist`", "Print the set playlist link");
+    helpEmbed.addField("`!lp setplaylist`", "Set the playlist link (must be provided as pure Spotify ID)");
+    helpEmbed.addField("`!lp refreshplaylist`", "Refresh the Spotify playlist with the current Google Forms data (requires a valid playlist link to be set)");
+    helpEmbed.addField("`!lp help`", "Display this page");
+    channel.sendMessage(helpEmbed);
+  }
+
+  private void sendBasicUsageEmbed(TextChannel channel) {
+    EmbedBuilder basicUsageEmbed = new EmbedBuilder();
+    basicUsageEmbed.setTitle("Usage");
+    basicUsageEmbed.setDescription("`!lp <command>`\n\nSee `!lp help` for more information");
+    channel.sendMessage(basicUsageEmbed);
   }
 }

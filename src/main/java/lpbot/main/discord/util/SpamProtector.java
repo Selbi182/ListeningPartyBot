@@ -1,13 +1,29 @@
 package lpbot.main.discord.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.javacord.api.entity.message.MessageAuthor;
 
 public final class SpamProtector {
 
-	// TODO for now only I got the power lol. in reality it should always be the guy who started the session and mods/admins
-	private final static long SELBI_ID = 186507215807447041L;
+	private final static Map<String, Long> cooldownPerUser = new HashMap<>();
+	private final static int COOLDOWN = 1000;
 
 	public static boolean checkAuthorOkay(MessageAuthor messageAuthor) {
-		return (messageAuthor.getId() == SELBI_ID);
+		// Don't listen to bot-written messages
+		if (messageAuthor.isBotUser()) {
+			return false;
+		}
+
+		// Prevent spam
+		String id = String.valueOf(messageAuthor.getId());
+		if (cooldownPerUser.containsKey(id)) {
+			if ((System.currentTimeMillis() - cooldownPerUser.get(id) - COOLDOWN) < 0) {
+				return false;
+			}
+		}
+		cooldownPerUser.put(id, System.currentTimeMillis());
+		return true;
 	}
 }

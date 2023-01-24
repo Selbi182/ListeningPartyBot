@@ -57,19 +57,14 @@ public class TotwDataHandler implements LPDataHandler {
     return List.of();
   }
 
-  private int createOrRefreshListeningPartyPlaylist() {
-    List<String> songIds = lpDataHandler.getLPEntityList().stream()
-        .map(LPEntity::getSongId)
-        .collect(Collectors.toList());
-
-    playlistService.clearPlaylist(playlistId);
-    playlistService.addSongsToPlaylistById(playlistId, songIds);
-
-    return songIds.size();
-  }
-
-  private String playlistLink() {
-    // TODO get the proper link (via the Spotify API)
-    return "https://open.spotify.com/playlist/" + playlistId;
-  }
+//  private int createOrRefreshListeningPartyPlaylist() {
+//    List<String> songIds = lpDataHandler.getLPEntityList().stream()
+//        .map(LPEntity::getSongId)
+//        .collect(Collectors.toList());
+//
+//    playlistService.clearPlaylist(playlistId);
+//    playlistService.addSongsToPlaylistById(playlistId, songIds);
+//
+//    return songIds.size();
+//  }
 }
