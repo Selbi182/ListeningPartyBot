@@ -4,7 +4,7 @@ import org.javacord.api.entity.message.MessageAuthor;
 
 public final class SpamProtector {
 
-	// TODO for now only I got the power lol
+	// TODO for now only I got the power lol. in reality it should always be the guy who started the session and mods/admins
 	private final static long SELBI_ID = 186507215807447041L;
 
 	public static boolean checkAuthorOkay(MessageAuthor messageAuthor) {

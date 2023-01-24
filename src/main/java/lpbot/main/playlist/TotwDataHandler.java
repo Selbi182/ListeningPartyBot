@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+@Deprecated
 @Component
 public class TotwDataHandler implements LPDataHandler {
   private static final String TOTW_DATA_FILE = "./totwdata.txt";
@@ -55,4 +57,19 @@ public class TotwDataHandler implements LPDataHandler {
     return List.of();
   }
 
+  private int createOrRefreshListeningPartyPlaylist() {
+    List<String> songIds = lpDataHandler.getLPEntityList().stream()
+        .map(LPEntity::getSongId)
+        .collect(Collectors.toList());
+
+    playlistService.clearPlaylist(playlistId);
+    playlistService.addSongsToPlaylistById(playlistId, songIds);
+
+    return songIds.size();
+  }
+
+  private String playlistLink() {
+    // TODO get the proper link (via the Spotify API)
+    return "https://open.spotify.com/playlist/" + playlistId;
+  }
 }

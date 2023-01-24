@@ -67,14 +67,27 @@ public class LPHandler {
     }
   }
 
-  public void stop() {
+  public void stop(TextChannel channel) {
     if (started) {
       this.started = false;
       singleTaskWaitingExecutor.stop();
-      channel.sendMessage("**Listening Party cancelled!**");
+      this.channel.sendMessage("**Listening Party cancelled!**");
     } else {
-      channel.sendMessage("**No active Listening Party.**");
+      this.channel.sendMessage("**No active Listening Party.**");
     }
+  }
+
+  public void pause(TextChannel channel) {
+    // TODO pause
+  }
+
+  public void resume(TextChannel channel) {
+    // TODO resume
+  }
+
+  public String getLinkForChannel(TextChannel channel) {
+    // TODO link
+    return "";
   }
 
   //////////////////
@@ -179,5 +192,9 @@ public class LPHandler {
 
     // Send off the embed to the Discord channel
     channel.sendMessage(embed);
+  }
+
+  public boolean setLink(String potentialPlaylist) {
+    return false;
   }
 }

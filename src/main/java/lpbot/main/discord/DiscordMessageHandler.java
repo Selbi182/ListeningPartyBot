@@ -3,6 +3,7 @@ package lpbot.main.discord;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.slf4j.Logger;
@@ -25,90 +26,79 @@ public class DiscordMessageHandler {
 
   private final TotwDataHandler lpDataHandler;
   private final LPHandler lpPartyHandler;
-  private final PlaylistService playlistService;
 
-  private String playlistId = null;
-
-  public DiscordMessageHandler(TotwDataHandler lpDataHandler, LPHandler lpPartyHandler, PlaylistService playlistService) {
+  public DiscordMessageHandler(TotwDataHandler lpDataHandler, LPHandler lpPartyHandler) {
     this.lpDataHandler = lpDataHandler;
     this.lpPartyHandler = lpPartyHandler;
-    this.playlistService = playlistService;
   }
 
   public void processMessage(MessageCreateEvent message) {
+    // TODO multi-channel support for multiple sessions at once. Session is linked to channel (stored via HashMap). Only the starter of the playlist has the ability to stop it
     if (SpamProtector.checkAuthorOkay(message.getMessageAuthor())) {
       String content = message.getMessageContent();
       if (content.startsWith(PREFIX)) {
         LOGGER.debug("New potential message received: " + content);
 
+        TextChannel channel = message.getChannel();
         Digester messageDigester = new Digester(content.substring(PREFIX.length()));
         String firstWord = messageDigester.shift();
         switch (firstWord) {
           case "start":
-            lpPartyHandler.start(message.getChannel());
+            lpPartyHandler.start(channel);
             break;
           case "stop":
-            lpPartyHandler.stop();
+            lpPartyHandler.stop(channel);
             break;
-          case "playlist":
-            if (playlistId != null) {
-              message.getChannel().sendMessage(playlistLink());
+          case "pause":
+            lpPartyHandler.pause(channel);
+            break;
+          case "resume":
+            lpPartyHandler.resume(channel);
+            break;
+          case "link":
+            String linkForChannel = lpPartyHandler.getLinkForChannel(channel);
+            if (linkForChannel != null) {
+              channel.sendMessage(linkForChannel);
             } else {
-              message.getChannel().sendMessage("**There's currently no playlist set! Use `!lp setplaylist` to set it.**");
+              channel.sendMessage("**There's currently no link set for this channel! Use `!lp set <link>` to set it**");
             }
             break;
-          case "setplaylist":
-            String potentialPlaylistId = messageDigester.shift();
-            if (potentialPlaylistId != null && !potentialPlaylistId.isBlank()) {
-              if (playlistService.isValidPlaylistId(potentialPlaylistId)) {
-                this.playlistId = potentialPlaylistId;
-                message.getChannel().sendMessage("Set target playlist to: " + playlistLink());
-              } else {
-                message.getChannel().sendMessage(potentialPlaylistId + " is not a valid Spotify playlist ID! Make sure to only provide the actual ID, not anything else from the URL.");
+          case "set":
+            String potentialPlaylist = messageDigester.shift();
+            if (potentialPlaylist != null && !potentialPlaylist.isBlank()) {
+              boolean success = lpPartyHandler.setLink(potentialPlaylist);
+              if (success) {
+                channel.sendMessage("Listening Party link set! Use `!lp start` to begin the session");
+                return;
               }
-            } else {
-              message.getChannel().sendMessage("Usage: `!lp setplaylist PLAYLISTID`");
             }
+            channel.sendMessage("Usage: `!lp set <link>` (Spotify album or playlist)");
             break;
-          case "refreshplaylist":
-            // TODO get the data from Google Forms
-            int updatedSongCount = createOrRefreshListeningPartyPlaylist();
-            message.getChannel().sendMessage("LP playlist updated! New song count: " + updatedSongCount);
+          case "totw":
+            // TODO totw
+//            int updatedSongCount = createOrRefreshListeningPartyPlaylist();
+//            message.getChannel().sendMessage("LP playlist updated! New song count: " + updatedSongCount);
             break;
           case "help":
+            // TODO update help (perhaps autogenerate)
             EmbedBuilder helpEmbed = new EmbedBuilder();
-            helpEmbed.setTitle("Help");
+            helpEmbed.setTitle("Listening Party Bot - Help");
             helpEmbed.addField("`!lp start`", "Start the Listening Party (beginning with a countdown)");
             helpEmbed.addField("`!lp stop`", "Cancel a currently ongoing Listening Party and reset it to the beginning");
             helpEmbed.addField("`!lp playlist`", "Print the set playlist link");
-            helpEmbed.addField("`!lp setplaylist`", "Set the playlist link (must be provided as pure Spotify ID).");
+            helpEmbed.addField("`!lp setplaylist`", "Set the playlist link (must be provided as pure Spotify ID)");
             helpEmbed.addField("`!lp refreshplaylist`", "Refresh the Spotify playlist with the current Google Forms data (requires a valid playlist link to be set)");
             helpEmbed.addField("`!lp help`", "Display this page");
-            message.getChannel().sendMessage(helpEmbed);
+            channel.sendMessage(helpEmbed);
             break;
           default:
             EmbedBuilder basicUsageEmbed = new EmbedBuilder();
             basicUsageEmbed.setTitle("Usage");
-            basicUsageEmbed.setDescription("`!lp <command>`\n\nSee `!lp help` for more information.");
-            message.getChannel().sendMessage(basicUsageEmbed);
+            basicUsageEmbed.setDescription("`!lp <command>`\n\nSee `!lp help` for more information");
+            channel.sendMessage(basicUsageEmbed);
             break;
         }
       }
     }
-  }
-
-  private int createOrRefreshListeningPartyPlaylist() {
-    List<String> songIds = lpDataHandler.getLPEntityList().stream()
-        .map(LPEntity::getSongId)
-        .collect(Collectors.toList());
-
-    playlistService.clearPlaylist(playlistId);
-    playlistService.addSongsToPlaylistById(playlistId, songIds);
-
-    return songIds.size();
-  }
-
-  private String playlistLink() {
-    return "https://open.spotify.com/playlist/" + playlistId;
   }
 }
