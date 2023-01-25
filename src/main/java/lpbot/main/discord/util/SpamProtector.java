@@ -3,21 +3,21 @@ package lpbot.main.discord.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.javacord.api.entity.message.MessageAuthor;
+import org.javacord.api.entity.user.User;
 
 public final class SpamProtector {
 
 	private final static Map<String, Long> coolDownPerUser = new HashMap<>();
 	private final static int COOL_DOWN = 1000;
 
-	public static boolean checkAuthorOkay(MessageAuthor messageAuthor) {
+	public static boolean checkAuthorOkay(User user) {
 		// Don't listen to bot-written messages
-		if (messageAuthor.isBotUser()) {
+		if (user.isBot()) {
 			return false;
 		}
 
 		// Prevent spam
-		String id = String.valueOf(messageAuthor.getId());
+		String id = String.valueOf(user.getId());
 		if (coolDownPerUser.containsKey(id)) {
 			if ((System.currentTimeMillis() - coolDownPerUser.get(id) - COOL_DOWN) < 0) {
 				return false;

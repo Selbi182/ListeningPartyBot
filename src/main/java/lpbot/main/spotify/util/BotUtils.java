@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 
 import se.michaelthelin.spotify.enums.AlbumGroup;
 import se.michaelthelin.spotify.model_objects.specification.Album;
@@ -228,4 +229,11 @@ public final class BotUtils {
 	public static void sendMessage(TextChannel channel, String text) {
 		channel.sendMessage("**" + text + "**");
 	}
+
+	/**
+	 * Respond to the given responder with the given text
+	 */
+  public static void sendResponse(InteractionImmediateResponseBuilder responder, String text) {
+		responder.setContent("**" + text + "**").respond();
+  }
 }

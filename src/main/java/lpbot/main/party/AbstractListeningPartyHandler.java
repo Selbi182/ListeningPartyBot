@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 
 import lpbot.main.party.data.LPQueueEntity;
 import lpbot.main.party.data.LPTarget;
@@ -33,7 +34,7 @@ public abstract class AbstractListeningPartyHandler {
   //////////////////
   // Bot Control
 
-  public void start(TextChannel textChannel, LPTarget target, int countdown) {
+  public void start(InteractionImmediateResponseBuilder responder, TextChannel textChannel, LPTarget target, int countdown) {
     try {
       if (!isStarted(textChannel)) {
         Queue<LPQueueEntity> eventQueue = new ConcurrentLinkedQueue<>();
@@ -41,42 +42,44 @@ public abstract class AbstractListeningPartyHandler {
         eventQueue.addAll(createTrackRunnables(textChannel, target));
         eventQueue.add(createFinalMessage(textChannel));
         recursiveSchedule(eventQueue, textChannel);
+        BotUtils.sendResponse(responder, "The Listening Party begins in...");
       } else {
-        BotUtils.sendMessage(textChannel, "Listening Party is already in progress");
+        BotUtils.sendResponse(responder, "Listening Party is already in progress");
       }
     } catch (Exception e) {
-      BotUtils.sendMessage(textChannel, "Failed to start Listening Party due to an internal error!");
+      BotUtils.sendResponse(responder, "Failed to start Listening Party due to an internal error!");
       e.printStackTrace();
     }
   }
 
-  public void stop(TextChannel textChannel) {
+  public void stop(InteractionImmediateResponseBuilder responder, TextChannel textChannel) {
     if (isStarted(textChannel)) {
       nextFutures.remove(textChannel.getId()).cancel(true);
       currentTracks.remove(textChannel.getId());
+      BotUtils.sendResponse(responder, "Listening Party cancelled!");
     } else {
-      BotUtils.sendMessage(textChannel, "No active Listening Party");
+      BotUtils.sendResponse(responder, "No active Listening Party");
     }
   }
 
-  public void printStatus(TextChannel textChannel) {
+  public void printStatus(InteractionImmediateResponseBuilder responder, TextChannel textChannel) {
     if (isStarted(textChannel)) {
+      responder.setContent("Current Track:").respond();
+
       long delay = nextFutures.get(textChannel.getId()).getDelay(TimeUnit.MILLISECONDS);
       CurrentTrack currentTrack = currentTracks.get(textChannel.getId());
 
       EmbedBuilder embedBuilder = new EmbedBuilder();
-      embedBuilder.setTitle("Current Track");
       String message = String.format("%s – %s", BotUtils.getFirstArtistName(currentTrack.getTrack()), currentTrack.getTrack().getName());
-      embedBuilder.setDescription(message);
+      embedBuilder.setTitle(message);
       embedBuilder.addField("Track Number:", currentTrack.getTrackNumber() + " of " + currentTrack.getTotalTrackCount(), true);
       long passedTime = currentTrack.getTrack().getDurationMs() - delay;
       embedBuilder.addField("Timestamp:", BotUtils.formatTime(passedTime) + " / " + BotUtils.formatTime(currentTrack.getTrack().getDurationMs()), true);
       embedBuilder.setThumbnail(currentTrack.getImageUrl());
 
       textChannel.sendMessage(embedBuilder);
-
     } else {
-      BotUtils.sendMessage(textChannel, "No active Listening Party");
+      BotUtils.sendResponse(responder, "No active Listening Party");
     }
   }
 
@@ -109,12 +112,9 @@ public abstract class AbstractListeningPartyHandler {
     return songRunnables;
   }
 
-
   private List<LPQueueEntity> createCountdownRunnables(TextChannel textChannel, int countdown) {
     int COUNTDOWN_INTERVAL_MS = 1000;
     List<LPQueueEntity> runnables = new ArrayList<>();
-    LPQueueEntity firstMessage = LPQueueEntity.of(() -> BotUtils.sendMessage(textChannel, "The Listening Party begins in..."), COUNTDOWN_INTERVAL_MS);
-    runnables.add(firstMessage);
 
     for (int i = countdown; i >= 0; i--) {
       String message = i > 0 ? String.valueOf(i) : "\uD83C\uDF89 NOW \uD83C\uDF8A";

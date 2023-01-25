@@ -1,6 +1,7 @@
 package lpbot.main.party.data;
 
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 
 import lpbot.main.party.AbstractListeningPartyHandler;
 
@@ -26,15 +27,15 @@ public class LPInstance {
 
   ///////////////////////
 
-  public void start(int countdown) {
-    lpHandler.start(textChannel, target, countdown);
+  public void start(InteractionImmediateResponseBuilder responder, int countdown) {
+    lpHandler.start(responder, textChannel, target, countdown);
   }
 
-  public void stop() {
-    lpHandler.stop(textChannel);
+  public void stop(InteractionImmediateResponseBuilder responder) {
+    lpHandler.stop(responder, textChannel);
   }
 
-  public void status() {
-    lpHandler.printStatus(textChannel);
+  public void status(InteractionImmediateResponseBuilder responder) {
+    lpHandler.printStatus(responder, textChannel);
   }
 }
