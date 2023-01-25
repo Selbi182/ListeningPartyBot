@@ -9,8 +9,8 @@ public class TotwDataHandler {
     String[] split = content.split(System.lineSeparator());
     List<String> totwData = new ArrayList<>(Arrays.asList(split)); // must be a modifiable list
 
-    String headline = totwData.remove(0);
-    int participants = Integer.parseInt(totwData.remove(0));
+    String headline = totwData.remove(0).trim();
+    int participants = Integer.parseInt(totwData.remove(0).trim());
 
     List<TotwEntity.Partial> totwEntityList1 = new ArrayList<>();
     List<TotwEntity.Partial> totwEntityList2 = new ArrayList<>();
