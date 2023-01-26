@@ -1,6 +1,9 @@
 package spotify.lpbot.discord;
 
+import java.awt.Color;
+
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 
 public class DiscordUtils {
@@ -34,5 +37,40 @@ public class DiscordUtils {
   public static void sendResponse(InteractionImmediateResponseBuilder responder, String text, boolean bold) {
     String content = bold ? "**" + text + "**" : text;
     responder.setContent(content).respond();
+  }
+
+  /**
+   * Create a simple embed with only the description set
+   */
+  public static EmbedBuilder createSimpleEmbed(String content) {
+    return createSimpleEmbed(content, null, false);
+  }
+
+  /**
+   * Create a simple embed with only the description set
+   */
+  public static EmbedBuilder createSimpleEmbed(String content, boolean useTitle) {
+    return createSimpleEmbed(content, null, useTitle);
+  }
+
+  /**
+   * Create a simple embed with only the description and color set
+   */
+  public static EmbedBuilder createSimpleEmbed(String content, Color color, boolean useTitle) {
+    EmbedBuilder embed = new EmbedBuilder();
+    if (useTitle) {
+      embed.setTitle(content);
+    } else {
+      embed.setDescription(content);
+    }
+    embed.setColor(color);
+    return embed;
+  }
+
+  /**
+   * Create a simple embed with only the description. The color red is predefined
+   */
+  public static EmbedBuilder createErrorEmbed(String content) {
+    return createSimpleEmbed("**ERROR:** " + content, Color.RED, false);
   }
 }

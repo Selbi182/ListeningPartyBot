@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.DiscordUtils;
@@ -35,52 +34,47 @@ public abstract class AbstractListeningPartyHandler {
   //////////////////
   // Bot Control
 
-  public void start(InteractionImmediateResponseBuilder responder, TextChannel textChannel, LPTarget target, int countdown) {
+  public void start(TextChannel textChannel, LPTarget target) {
     try {
       if (!isStarted(textChannel)) {
-        Queue<LPQueueEntity> eventQueue = new ConcurrentLinkedQueue<>();
-        eventQueue.addAll(createCountdownRunnables(textChannel, countdown));
-        eventQueue.addAll(createTrackRunnables(textChannel, target));
+        Queue<LPQueueEntity> eventQueue = new ConcurrentLinkedQueue<>(createTrackRunnables(textChannel, target));
         eventQueue.add(createFinalMessage(textChannel));
         recursiveSchedule(eventQueue, textChannel);
-        DiscordUtils.sendResponse(responder, "The Listening Party begins in...");
-      } else {
-        DiscordUtils.sendResponse(responder, "Listening Party is already in progress");
       }
     } catch (Exception e) {
-      DiscordUtils.sendResponse(responder, "Failed to start Listening Party due to an internal error!");
       e.printStackTrace();
     }
   }
 
-  public void stop(InteractionImmediateResponseBuilder responder, TextChannel textChannel) {
+  public EmbedBuilder stop(TextChannel textChannel) {
     if (isStarted(textChannel)) {
       nextFutures.remove(textChannel.getId()).cancel(true);
       currentTracks.remove(textChannel.getId());
-      DiscordUtils.sendResponse(responder, "Listening Party cancelled!");
+      return DiscordUtils.createSimpleEmbed("Listening Party cancelled!");
     } else {
-      DiscordUtils.sendResponse(responder, "No active Listening Party");
+      return DiscordUtils.createErrorEmbed("No active Listening Party");
     }
   }
 
-  public void printStatus(InteractionImmediateResponseBuilder responder, TextChannel textChannel) {
+  public EmbedBuilder createStatusEmbed(TextChannel textChannel) {
     if (isStarted(textChannel)) {
-      responder.setContent("Current Track:").respond();
-
       long delay = nextFutures.get(textChannel.getId()).getDelay(TimeUnit.MILLISECONDS);
       CurrentTrack currentTrack = currentTracks.get(textChannel.getId());
-
-      EmbedBuilder embedBuilder = new EmbedBuilder();
-      String message = String.format("%s – %s", BotUtils.getFirstArtistName(currentTrack.getTrack()), currentTrack.getTrack().getName());
-      embedBuilder.setTitle(message);
-      embedBuilder.addField("Track Number:", currentTrack.getTrackNumber() + " of " + currentTrack.getTotalTrackCount(), true);
-      long passedTime = currentTrack.getTrack().getDurationMs() - delay;
-      embedBuilder.addField("Timestamp:", BotUtils.formatTime(passedTime) + " / " + BotUtils.formatTime(currentTrack.getTrack().getDurationMs()), true);
-      embedBuilder.setThumbnail(currentTrack.getImageUrl());
-
-      textChannel.sendMessage(embedBuilder);
+      if (currentTrack != null) {
+        // todo album name
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        String message = String.format("%s – %s", BotUtils.getFirstArtistName(currentTrack.getTrack()), currentTrack.getTrack().getName());
+        embedBuilder.setTitle(message);
+        embedBuilder.addField("Track Number:", currentTrack.getTrackNumber() + " of " + currentTrack.getTotalTrackCount(), true);
+        long passedTime = currentTrack.getTrack().getDurationMs() - delay;
+        embedBuilder.addField("Timestamp:", BotUtils.formatTime(passedTime) + " / " + BotUtils.formatTime(currentTrack.getTrack().getDurationMs()), true);
+        embedBuilder.setThumbnail(currentTrack.getImageUrl());
+        return embedBuilder;
+      } else {
+        return DiscordUtils.createErrorEmbed("Wait for the countdown to finish");
+      }
     } else {
-      DiscordUtils.sendResponse(responder, "No active Listening Party");
+      return DiscordUtils.createErrorEmbed("No active Listening Party");
     }
   }
 
@@ -95,9 +89,7 @@ public abstract class AbstractListeningPartyHandler {
     LPQueueEntity poll = eventQueue.poll();
     if (poll != null) {
       this.scheduledExecutorService.execute(poll.getRunnable());
-      ScheduledFuture<?> future =
-        this.scheduledExecutorService.schedule(() -> recursiveSchedule(eventQueue, textChannel), poll.getNextDelay(),
-          TimeUnit.MILLISECONDS);
+      ScheduledFuture<?> future = this.scheduledExecutorService.schedule(() -> recursiveSchedule(eventQueue, textChannel), poll.getNextDelay(), TimeUnit.MILLISECONDS);
       nextFutures.put(textChannel.getId(), future);
     }
   }
@@ -111,19 +103,6 @@ public abstract class AbstractListeningPartyHandler {
       songRunnables.add(songRunnable);
     }
     return songRunnables;
-  }
-
-  private List<LPQueueEntity> createCountdownRunnables(TextChannel textChannel, int countdown) {
-    int COUNTDOWN_INTERVAL_MS = 1000;
-    List<LPQueueEntity> runnables = new ArrayList<>();
-
-    for (int i = countdown; i >= 0; i--) {
-      String message = i > 0 ? String.valueOf(i) : "\uD83C\uDF89 NOW \uD83C\uDF8A";
-      LPQueueEntity countdownMessage = LPQueueEntity.of(() -> DiscordUtils.sendMessage(textChannel, message), COUNTDOWN_INTERVAL_MS);
-      runnables.add(countdownMessage);
-    }
-
-    return runnables;
   }
 
   private LPQueueEntity createFinalMessage(TextChannel textChannel) {

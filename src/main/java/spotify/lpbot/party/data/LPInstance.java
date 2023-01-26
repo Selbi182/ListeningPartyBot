@@ -1,7 +1,7 @@
 package spotify.lpbot.party.data;
 
 import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import spotify.lpbot.party.handler.AbstractListeningPartyHandler;
 
@@ -25,17 +25,22 @@ public class LPInstance {
     return !lpHandler.isStarted(textChannel);
   }
 
+  public TextChannel getTextChannel() {
+    return textChannel;
+  }
+
   ///////////////////////
 
-  public void start(InteractionImmediateResponseBuilder responder, int countdown) {
-    lpHandler.start(responder, textChannel, target, countdown);
+  public void start() {
+    lpHandler.start(textChannel, target);
   }
 
-  public void stop(InteractionImmediateResponseBuilder responder) {
-    lpHandler.stop(responder, textChannel);
+  public EmbedBuilder stop() {
+    return lpHandler.stop(textChannel);
   }
 
-  public void status(InteractionImmediateResponseBuilder responder) {
-    lpHandler.printStatus(responder, textChannel);
+  public EmbedBuilder status() {
+    return lpHandler.createStatusEmbed(textChannel);
   }
+
 }

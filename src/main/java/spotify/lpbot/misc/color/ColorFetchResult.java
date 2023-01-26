@@ -19,7 +19,7 @@ public class ColorFetchResult {
   }
 
   public static class RGB {
-    public static final RGB DEFAULT_RGB = RGB.of(Color.WHITE);
+    public static final RGB DEFAULT_RGB = RGB.of(Color.BLACK);
 
     private int r;
     private int g;
