@@ -1,15 +1,24 @@
 package spotify.lpbot.party.handler;
 
+import java.awt.Color;
+
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.springframework.stereotype.Component;
 
 import se.michaelthelin.spotify.model_objects.specification.Track;
+import spotify.lpbot.misc.color.ColorProvider;
 import spotify.lpbot.party.data.LPTarget;
 import spotify.util.BotUtils;
 
 @Component
 public class ListeningPartyHandler extends AbstractListeningPartyHandler {
+  private final ColorProvider colorProvider;
+
+  ListeningPartyHandler(ColorProvider colorProvider) {
+    super();
+    this.colorProvider = colorProvider;
+  }
 
   @Override
   protected Runnable createTrackRunnable(TextChannel textChannel, LPTarget target, int index) {
@@ -47,8 +56,12 @@ public class ListeningPartyHandler extends AbstractListeningPartyHandler {
     String songLength = BotUtils.formatTime(track.getDurationMs());
     embed.addField("Song Length:", songLength, true);
 
-    // Full-res cover art
-    embed.setImage(BotUtils.findLargestImage(track.getAlbum().getImages()));
+    // Image and color
+    String imageUrl = BotUtils.findLargestImage(track.getAlbum().getImages());
+    embed.setImage(imageUrl);
+
+    Color embedColor = colorProvider.getDominantColorFromImageUrl(imageUrl);
+    embed.setColor(embedColor);
 
     // "Album: [Artist] – [Album] ([Release year])
     String albumArtists = BotUtils.joinArtists(track.getAlbum().getArtists());
@@ -56,9 +69,7 @@ public class ListeningPartyHandler extends AbstractListeningPartyHandler {
     String albumReleaseYear = BotUtils.findReleaseYear(track);
     embed.setFooter(String.format("%s – %s (%s)", albumArtists, albumName, albumReleaseYear));
 
-    // Add some finishing touches
-    embed.setColor(embedColor);
-
+    // Send off the embed to the Discord channel
     return embed;
   }
 }

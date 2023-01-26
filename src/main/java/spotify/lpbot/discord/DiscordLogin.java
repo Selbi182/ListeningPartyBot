@@ -3,7 +3,6 @@ package spotify.lpbot.discord;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,7 +64,7 @@ public class DiscordLogin {
   }
 
   private void setupSlashCommands(DiscordApi api) {
-    Set<SlashCommandBuilder> commands = new HashSet<>(List.of(
+    Set<SlashCommandBuilder> commands = Set.of(
       SlashCommand.with("start", "Start the Listening Party", List.of(SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down (default 5)", false))),
       SlashCommand.with("stop", "Cancel a currently ongoing Listening Party and reset it to the beginning"),
       SlashCommand.with("status", "Print info of the current Listening Party for this channel"),
@@ -73,7 +72,7 @@ public class DiscordLogin {
       SlashCommand.with("set", "Set the album/playlist link (must be provided as URL)", List.of(SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true))),
       SlashCommand.with("help", "Print the commands as chat message"),
       SlashCommand.with("totw", "[Restricted Access] Host a Track-of-the-Week party", List.of(SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the TOTW info data", true)))
-    ));
+    );
     api.bulkOverwriteGlobalApplicationCommands(commands).join();
   }
 }

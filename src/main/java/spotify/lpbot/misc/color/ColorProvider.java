@@ -1,0 +1,53 @@
+package spotify.lpbot.misc.color;
+
+import java.awt.Color;
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Component
+public class ColorProvider {
+
+  @Value("${colorfetch.url}")
+  private String colorFetchUrl;
+
+  private final ObjectMapper objectMapper;
+  private final Map<String, Color> cache;
+
+  ColorProvider() {
+    this.objectMapper = new ObjectMapper();
+    this.cache = new ConcurrentHashMap<>();
+  }
+
+  public Color getDominantColorFromImageUrl(String artworkUrl) {
+    if (cache.containsKey(artworkUrl)) {
+      return cache.get(artworkUrl);
+    } else {
+      ColorFetchResult fromWebService = getFromWebService(artworkUrl);
+      ColorFetchResult.RGB primary = fromWebService.getPrimary();
+      Color asAwtColor = new Color(primary.getR(), primary.getG(), primary.getB());
+      cache.put(artworkUrl, asAwtColor);
+      return asAwtColor;
+    }
+  }
+
+  private ColorFetchResult getFromWebService(String artworkUrl) {
+    try {
+      String requestUri = UriComponentsBuilder.fromUriString(colorFetchUrl)
+          .queryParam("url", artworkUrl)
+          .queryParam("strategy", "color_thief").build().toUriString();
+      String rawJson = Jsoup.connect(requestUri).ignoreContentType(true).execute().body();
+      return objectMapper.readValue(rawJson, ColorFetchResult.class);
+    } catch (IOException e) {
+      e.printStackTrace();
+      return ColorFetchResult.FALLBACK;
+    }
+  }
+}

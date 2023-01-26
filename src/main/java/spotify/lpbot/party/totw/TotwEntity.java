@@ -6,10 +6,10 @@ import java.util.List;
 
 public class TotwEntity {
   private final String headline;
-  private final int participants;
+  private final List<String> participants;
   private final List<Partial> totwEntities;
 
-  public TotwEntity(String headline, int participants, List<Partial> totwEntities) {
+  public TotwEntity(String headline, List<String> participants, List<Partial> totwEntities) {
     this.headline = headline;
     this.participants = participants;
     this.totwEntities = totwEntities;
@@ -19,7 +19,7 @@ public class TotwEntity {
     return headline;
   }
 
-  public int getParticipants() {
+  public List<String> getParticipants() {
     return participants;
   }
 

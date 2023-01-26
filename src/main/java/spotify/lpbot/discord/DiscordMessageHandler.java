@@ -109,7 +109,7 @@ public class DiscordMessageHandler {
   }
 
   private void link(InteractionImmediateResponseBuilder responder, Optional<LPInstance> lpInstance) {
-    lpInstance.ifPresentOrElse((lp) -> DiscordUtils.sendResponse(responder, lp.getAlbumOrPlaylistUri()), () -> sendGenericUnsetError(responder));
+    lpInstance.ifPresentOrElse((lp) -> DiscordUtils.sendResponse(responder, lp.getAlbumOrPlaylistUri(), false), () -> sendGenericUnsetError(responder));
   }
 
   private void totw(InteractionImmediateResponseBuilder responder, TextChannel channel, SlashCommandInteraction slashCommandInteraction) {
@@ -123,7 +123,7 @@ public class DiscordMessageHandler {
             TotwEntity totwData = TotwDataHandler.parseTextFile(fileContent);
             LPInstance registeredInstance = lpChannelRegistry.registerTotw(channel, totwData);
             if (registeredInstance != null) {
-              responder.setContent("**TOTW party is set (" + totwData.getParticipants() + " participants)! Use `/start` to begin the session**\n" + registeredInstance.getAlbumOrPlaylistUri()).respond();
+              responder.setContent("**TOTW party is set (" + totwData.getParticipants().size() + " participants)! Use `/start` to begin the session**\n" + registeredInstance.getAlbumOrPlaylistUri()).respond();
             } else {
               DiscordUtils.sendResponse(responder, "ERROR: Invalid Spotify album/playlist ID or a Listening Party is currently in progress!");
             }

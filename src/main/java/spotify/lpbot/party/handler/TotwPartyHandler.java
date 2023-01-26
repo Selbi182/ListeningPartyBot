@@ -1,5 +1,6 @@
 package spotify.lpbot.party.handler;
 
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.lastfm.LastFmDataHandler;
+import spotify.lpbot.misc.color.ColorProvider;
 import spotify.lpbot.party.data.LPTarget;
 import spotify.lpbot.party.totw.TotwEntity;
 import spotify.util.BotUtils;
@@ -16,10 +18,12 @@ import spotify.util.BotUtils;
 @Component
 public class TotwPartyHandler extends AbstractListeningPartyHandler {
   private final LastFmDataHandler lastFmDataHandler;
+  private final ColorProvider colorProvider;
 
-  public TotwPartyHandler(LastFmDataHandler lastFmDataHandler) {
+  TotwPartyHandler(LastFmDataHandler lastFmDataHandler, ColorProvider colorProvider) {
     super();
     this.lastFmDataHandler = lastFmDataHandler;
+    this.colorProvider = colorProvider;
   }
 
   @Override
@@ -92,16 +96,15 @@ public class TotwPartyHandler extends AbstractListeningPartyHandler {
 
     // Full-res cover art
     String imageUrl = track.getAlbum().getImages()[0].getUrl();
+    Color embedColor = colorProvider.getDominantColorFromImageUrl(imageUrl);
     embed.setImage(imageUrl);
+    embed.setColor(embedColor);
 
     // "Album: [Artist] – [Album] ([Release year])
     String albumArtists = BotUtils.joinArtists(track.getAlbum().getArtists());
     String albumName = track.getAlbum().getName();
     String albumReleaseYear = BotUtils.findReleaseYear(track);
     embed.setFooter(String.format("%s – %s\n(%s)", albumArtists, albumName, albumReleaseYear));
-
-    // Add some finishing touches
-    embed.setColor(embedColor);
 
     // Send off the embed to the Discord channel
     return embed;

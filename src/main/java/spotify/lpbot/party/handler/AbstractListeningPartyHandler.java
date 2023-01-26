@@ -1,6 +1,5 @@
 package spotify.lpbot.party.handler;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,20 +15,18 @@ import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 
+import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.DiscordUtils;
 import spotify.lpbot.party.data.LPQueueEntity;
 import spotify.lpbot.party.data.LPTarget;
-import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.util.BotUtils;
 
 public abstract class AbstractListeningPartyHandler {
-  protected final Color embedColor = new Color(173, 20, 87);
-
   private final ScheduledExecutorService scheduledExecutorService;
   private final Map<Long, ScheduledFuture<?>> nextFutures;
   private final Map<Long, CurrentTrack> currentTracks;
 
-  public AbstractListeningPartyHandler() {
+  AbstractListeningPartyHandler() {
     this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     this.nextFutures = new ConcurrentHashMap<>();
     this.currentTracks = new ConcurrentHashMap<>();
