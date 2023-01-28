@@ -12,11 +12,14 @@ import org.springframework.stereotype.Component;
 
 import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.discord.util.SpamProtector;
-import spotify.lpbot.party.lp.StandardListeningParty;
 import spotify.lpbot.party.registry.ChannelRegistry;
 
 @Component
 public class DiscordMessageHandler {
+  private static final long DEFAULT_COUNTDOWN_SECONDS = 5L;
+  private static final long MAX_COUNTDOWNS_SECONDS = 30L;
+  private static final long DEFAULT_SKIP_AMOUNT = 1L;
+
   private final ChannelRegistry lpChannelRegistry;
 
   public DiscordMessageHandler(ChannelRegistry lpChannelRegistry) {
@@ -34,7 +37,7 @@ public class DiscordMessageHandler {
           switch (command) {
             case "start":
               Optional<SlashCommandInteractionOption> optionalCountdown = slashCommandInteraction.getOptionByName("countdown");
-              DiscordCountdownHandler.getCountdownSeconds(optionalCountdown)
+              getCountdownSeconds(optionalCountdown)
                 .ifPresentOrElse(countdown -> lpChannelRegistry
                   .getExistingLPInstance(channel, responder)
                   .ifPresent(lp -> lp.start(responder, countdown)),
@@ -44,7 +47,12 @@ public class DiscordMessageHandler {
               lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.stop(responder));
               break;
             case "skip":
-              lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.skip(responder));
+              Optional<SlashCommandInteractionOption> optionalSkipAmount = slashCommandInteraction.getOptionByName("amount");
+              getSkipAmount(optionalSkipAmount)
+                .ifPresentOrElse(skipAmount -> lpChannelRegistry
+                  .getExistingLPInstance(channel, responder)
+                  .ifPresent(lp -> lp.skip(responder, skipAmount)),
+                () -> responder.addEmbed(DiscordUtils.createErrorEmbed("Invalid skip amount")).update());
               break;
             case "pause":
               lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.pause(responder));
@@ -89,5 +97,33 @@ public class DiscordMessageHandler {
     EmbedBuilder basicUsageEmbed = new EmbedBuilder();
     basicUsageEmbed.setDescription("`/<command>`\n\nSee `/sendHelpEmbed` for more information");
     responder.addEmbed(basicUsageEmbed).update();
+  }
+
+  public static Optional<Integer> getCountdownSeconds(Optional<SlashCommandInteractionOption> customCountdownSeconds) {
+    long countdown = Math.toIntExact(customCountdownSeconds
+        .map(SlashCommandInteractionOption::getLongValue)
+        .map(Optional::get)
+        .map(l -> Math.min(l, Integer.MAX_VALUE))
+        .orElse(DEFAULT_COUNTDOWN_SECONDS));
+
+    if (countdown >= 0 && countdown <= MAX_COUNTDOWNS_SECONDS) {
+      return Optional.of((int) countdown);
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  private Optional<Integer> getSkipAmount(Optional<SlashCommandInteractionOption> optionalSkipAmount) {
+    long skipAmount = Math.toIntExact(optionalSkipAmount
+        .map(SlashCommandInteractionOption::getLongValue)
+        .map(Optional::get)
+        .map(l -> Math.min(l, Integer.MAX_VALUE))
+        .orElse(DEFAULT_SKIP_AMOUNT));
+
+    if (skipAmount >= 1) {
+      return Optional.of((int) skipAmount);
+    } else {
+      return Optional.empty();
+    }
   }
 }

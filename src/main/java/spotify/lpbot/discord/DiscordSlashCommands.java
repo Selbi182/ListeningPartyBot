@@ -13,9 +13,9 @@ import com.google.common.collect.ImmutableSet;
 
 public class DiscordSlashCommands {
   public final static List<LPBotCommand> commands = List.of(
-    LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down, defaults to 5", false)),
+    LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down, default: 5", false)),
     LPBotCommand.of("stop", "Cancel a current Listening Party and reset it to the beginning"),
-    LPBotCommand.of("skip", "Skip the current song in the Listening Party"),
+    LPBotCommand.of("skip", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
     LPBotCommand.of("pause", "Pause the current Listening Party (resume by typing `/start` again)"),
     LPBotCommand.of("nowplaying", "Print info of the current Listening Party for this channel"),
     LPBotCommand.of("link", "Print the set target link"),
