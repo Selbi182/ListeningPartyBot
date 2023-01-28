@@ -28,11 +28,7 @@ public class PlaylistTrackListWrapper implements TrackListWrapper {
   }
 
   @Override
-  public Color getColorForTrack(Track track) {
-    int index = tracks.indexOf(track);
-    if (index < 0) {
-      throw new IllegalArgumentException("Track is not part of this PlaylistTrackListWrapper");
-    }
+  public Color getColorByTrackIndex(int index) {
     return colors.get(index);
   }
 }

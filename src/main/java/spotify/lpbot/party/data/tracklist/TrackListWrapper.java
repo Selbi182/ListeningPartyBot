@@ -11,5 +11,5 @@ public interface TrackListWrapper {
 
   List<Track> getTracks();
 
-  Color getColorForTrack(Track track);
+  Color getColorByTrackIndex(int index);
 }

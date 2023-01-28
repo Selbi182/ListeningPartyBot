@@ -28,7 +28,7 @@ public class AlbumTrackListWrapper implements TrackListWrapper {
   }
 
   @Override
-  public Color getColorForTrack(Track track) {
-    return color;
+  public Color getColorByTrackIndex(int index) {
+    return color; // album only has a single image, therefore only one color; index is irrelevant
   }
 }

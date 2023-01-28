@@ -1,45 +1,42 @@
 package spotify.lpbot.party.lp;
 
-import org.springframework.stereotype.Component;
+import java.awt.Color;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
-@Component
-public class TotwParty  {
-/*
-  public TotwParty(TextChannel channel, InteractionOriginalResponseUpdater responder, Optional<TotwTrackListWrapper> totwTrackList) {
-    super();
+import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
+
+import se.michaelthelin.spotify.model_objects.specification.Track;
+import spotify.lpbot.party.data.TotwData;
+import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
+import spotify.util.BotUtils;
+
+public class TotwParty extends AbstractListeningParty{
+  private final TotwTrackListWrapper totwTrackListWrapper;
+
+  public TotwParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper) {
+    super(channel, totwTrackListWrapper);
+    this.totwTrackListWrapper = totwTrackListWrapper;
+  }
+
+  private TotwData.Entry getCurrentTotwEntry() {
+    return totwTrackListWrapper.getTotwData().getTotwEntries().get(getCurrentTrackListIndex());
   }
 
   @Override
-  protected Runnable createTrackRunnable(TextChannel textChannel, PlaylistTrackListWrapper target, int index) {
-    return () -> {
-      Track t = target.getTracks().get(index);
-      int currentTrackNumber = index + 1;
-      String image = BotUtils.findLargestImage(t.getAlbum().getImages());
-      NowPlayingInfo currentTrack = new NowPlayingInfo(t, currentTrackNumber, target.getTracks().size(), image);
-      TotwData.Entry totwEntity = target.getTotwData().getTotwEntities().get(index);
-      TotwData.Full totwEntityFull = upgradeTotwEntity(totwEntity);
-      EmbedBuilder discordEmbedForTrack = createDiscordEmbedForTotwEntry(currentTrack, totwEntityFull);
-      textChannel.sendMessage(discordEmbedForTrack);
-      putCurrentTrack(textChannel.getId(), currentTrack);
-    };
-  }
-
-  private TotwData.Full upgradeTotwEntity(TotwData.Entry totwEntity) {
-    return lastFmDataHandler.attachLastFmData(totwEntity);
-  }
-
-  private EmbedBuilder createDiscordEmbedForTotwEntry(NowPlayingInfo nowPlayingInfo, TotwData.Full totwEntity) {
+  EmbedBuilder createDiscordEmbedForTrack(Track track) {
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
-    Track track = nowPlayingInfo.getTrack();
+    TotwData.Entry currentTotwEntry = getCurrentTotwEntry();
 
     // (n/m) Subbed by: [entered name]
     // -> link to last.fm profile
     // -> with last.fm pfp
-    String subbedBy = totwEntity.getName();
-    String lfmProfileLink = totwEntity.getUserPageUrl();
-    String lfmProfilePicture = totwEntity.getProfilePictureUrl();
-    String songOrdinal = nowPlayingInfo.getTrackNumber() + " / " + nowPlayingInfo.getTotalTrackCount();
+    String subbedBy = currentTotwEntry.getName();
+    String lfmProfileLink = currentTotwEntry.getUserPageUrl();
+    String lfmProfilePicture = currentTotwEntry.getProfilePictureUrl();
+    String songOrdinal = getCurrentTrackNumber() + " / " + getTotalTrackCount();
     String authorHeadline = String.format("(%s) Submitted by: %s", songOrdinal, subbedBy);
     if (lfmProfileLink != null && lfmProfilePicture != null) {
       embed.setAuthor(authorHeadline, lfmProfileLink, lfmProfilePicture);
@@ -53,31 +50,31 @@ public class TotwParty  {
     String songTitle = track.getName();
     embed.setTitle(String.format("%s \u2013 %s", songArtists, songTitle));
 
-    String songLfmLink = totwEntity.getSongLinkUrl();
+    String songLfmLink = currentTotwEntry.getSongLinkUrl();
     if (songLfmLink != null) {
       embed.setUrl(songLfmLink);
     }
 
     // Write-up (with fancy quotation marks and in cursive)
-    if (!totwEntity.getWriteUp().isBlank()) {
-      String writeUp = Arrays.stream(totwEntity.getWriteUp().split("\n"))
-        .map(w -> String.format("> %s", w))
-        .collect(Collectors.joining("\n"));
-      embed.setDescription(String.format("**Write-up:**\n*\u201C%s\u201D*", writeUp));
+    if (!currentTotwEntry.getWriteUp().isBlank()) {
+      String writeUp = Arrays.stream(currentTotwEntry.getWriteUp().split("\n"))
+        .map(String::trim)
+        .collect(Collectors.joining("\n> "));
+      embed.setDescription(String.format("**Write-up:**\n> *\u201C%s\u201D*", writeUp));
     }
 
     // Field info
     String songLength = BotUtils.formatTime(track.getDurationMs());
     embed.addField("Song Length:", songLength, true);
 
-    Integer scrobbleCount = totwEntity.getScrobbleCount();
+    Integer scrobbleCount = currentTotwEntry.getScrobbleCount();
     if (scrobbleCount != null && scrobbleCount > 0) {
       embed.addField(subbedBy + "\u2019s Scrobbles:", String.valueOf(scrobbleCount), true);
     }
 
     // Full-res cover art
-    String imageUrl = track.getAlbum().getImages()[0].getUrl();
-    Color embedColor = colorProvider.getDominantColorFromImage(imageUrl);
+    String imageUrl = BotUtils.findLargestImage(track.getAlbum().getImages());
+    Color embedColor = getColorForCurrentTrack();
     embed.setImage(imageUrl);
     embed.setColor(embedColor);
 
@@ -90,5 +87,4 @@ public class TotwParty  {
     // Send off the embed to the Discord channel
     return embed;
   }
-  */
 }
