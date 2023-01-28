@@ -95,7 +95,7 @@ public class TotwCreationService {
     List<Color> colors = allPlaylistTracks.stream()
         .map(Track::getAlbum)
         .map(AlbumSimplified::getImages)
-        .map(BotUtils::findLargestImage)
+        .map(BotUtils::findSmallestImage)
         .map(colorService::getDominantColorFromImage)
         .collect(Collectors.toList());
 

@@ -63,8 +63,8 @@ public class TrackListCreationService {
       Track[] execute = SpotifyCall.execute(spotifyApi.getSeveralTracks(ids));
       allAlbumTracks.addAll(Arrays.asList(execute));
     }
-    String largestImage = BotUtils.findLargestImage(album.getImages());
-    Color albumColor = colorService.getDominantColorFromImage(largestImage);
+    String smallestImage = BotUtils.findSmallestImage(album.getImages());
+    Color albumColor = colorService.getDominantColorFromImage(smallestImage);
     return Optional.of(new AlbumTrackListWrapper(album, allAlbumTracks, albumColor));
   }
 
@@ -77,7 +77,7 @@ public class TrackListCreationService {
     List<Color> colors = allPlaylistTracks.stream()
         .map(Track::getAlbum)
         .map(AlbumSimplified::getImages)
-        .map(BotUtils::findLargestImage)
+        .map(BotUtils::findSmallestImage)
         .map(colorService::getDominantColorFromImage)
         .collect(Collectors.toList());
     return Optional.of(new PlaylistTrackListWrapper(playlist, allPlaylistTracks, colors));
