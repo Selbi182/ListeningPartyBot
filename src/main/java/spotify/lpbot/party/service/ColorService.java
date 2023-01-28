@@ -2,10 +2,8 @@ package spotify.lpbot.party.service;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,17 +40,12 @@ public class ColorService {
     }
   }
 
-  public List<Color> getDominantColorsForMultipleImages(List<String> artworkUrls) {
-    return artworkUrls.stream()
-        .map(this::getDominantColorFromImage)
-        .collect(Collectors.toList());
-  }
-
   private ColorFetchResult getFromWebService(String artworkUrl) {
     try {
       String requestUri = UriComponentsBuilder.fromUriString(colorFetchUrl)
           .queryParam("url", artworkUrl)
-          .queryParam("strategy", "color_thief").build().toUriString();
+          .queryParam("strategy", "android_palette")
+          .build().toUriString();
       String rawJson = Jsoup.connect(requestUri).ignoreContentType(true).execute().body();
       return objectMapper.readValue(rawJson, ColorFetchResult.class);
     } catch (IOException e) {

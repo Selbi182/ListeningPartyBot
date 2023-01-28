@@ -15,7 +15,7 @@ public class StandardListeningParty extends AbstractListeningParty {
   }
 
   @Override
-  EmbedBuilder createDiscordEmbedForTrack(Track track) {
+  protected EmbedBuilder createDiscordEmbedForTrack(Track track) {
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
 

@@ -21,15 +21,11 @@ import spotify.util.BotUtils;
 
 @Component
 public class LastFmService {
-
   private final SpotifyApi spotifyApi;
-  private final BotLogger log;
-
   private UriComponentsBuilder lastFmApiUrl;
 
-  public LastFmService(SpotifyApi spotifyApi, BotLogger botLogger) {
+  LastFmService(SpotifyApi spotifyApi, BotLogger botLogger) {
     this.spotifyApi = spotifyApi;
-    this.log = botLogger;
 
     try {
       String lastFmApiToken = readToken();
@@ -40,37 +36,33 @@ public class LastFmService {
         .queryParam("api_key", lastFmApiToken)
         .queryParam("format", "json");
     } catch (IOException e) {
-      log.error("Failed to start bot! (Couldn't read last.fm token). Terminating...");
+      botLogger.error("Failed to start bot! (Couldn't read last.fm token). Terminating...");
       e.printStackTrace();
       System.exit(1);
     }
   }
 
-  public void attachLastFmData(TotwData.Entry totwEntryPartial) {
+  public void attachLastFmData(TotwData.Entry totwEntryPartial) throws IOException {
     String lastFmName = totwEntryPartial.getLastFmName();
-    try {
-      // User info
-      String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lastFmName);
-      JsonObject user = executeRequest(lastFmApiUrlForUserInfo, "user");
-      String userPageUrl = user.get("url").getAsString();
-      totwEntryPartial.setUserPageUrl(userPageUrl);
-      String userImageUrl = user.get("image").getAsJsonArray().get(0).getAsJsonObject().get("#text").getAsString();
-      totwEntryPartial.setProfilePictureUrl(userImageUrl);
 
-      // Track info
-      Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntryPartial.getSongId()));
-      String artistName = BotUtils.getFirstArtistName(spotifyTrack);
-      String trackName = spotifyTrack.getName();
-      String url = assembleLastFmApiUrlForTrackGetInfo(lastFmName, artistName, trackName);
-      JsonObject jsonTrack = executeRequest(url, "track");
-      String songUrl = jsonTrack.get("url").getAsString();
-      totwEntryPartial.setSongLinkUrl(songUrl);
-      int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
-      totwEntryPartial.setScrobbleCount(scrobbleCount);
+    // User info
+    String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lastFmName);
+    JsonObject user = executeRequest(lastFmApiUrlForUserInfo, "user");
+    String userPageUrl = user.get("url").getAsString();
+    totwEntryPartial.setUserPageUrl(userPageUrl);
+    String userImageUrl = user.get("image").getAsJsonArray().get(0).getAsJsonObject().get("#text").getAsString();
+    totwEntryPartial.setProfilePictureUrl(userImageUrl);
 
-    } catch (Exception e) {
-      log.error("Error during last.fm API call. Likely caused by an unknown username: " + lastFmName);
-    }
+    // Track info
+    Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntryPartial.getSongId()));
+    String artistName = BotUtils.getFirstArtistName(spotifyTrack);
+    String trackName = spotifyTrack.getName();
+    String url = assembleLastFmApiUrlForTrackGetInfo(lastFmName, artistName, trackName);
+    JsonObject jsonTrack = executeRequest(url, "track");
+    String songUrl = jsonTrack.get("url").getAsString();
+    totwEntryPartial.setSongLinkUrl(songUrl);
+    int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
+    totwEntryPartial.setScrobbleCount(scrobbleCount);
   }
 
   private JsonObject executeRequest(String url, String rootElement) throws IOException {

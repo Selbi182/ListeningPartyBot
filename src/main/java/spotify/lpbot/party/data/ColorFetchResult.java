@@ -26,7 +26,6 @@ public class ColorFetchResult {
     private int b;
 
     public RGB() {
-
     }
 
     public RGB(int r, int g, int b) {

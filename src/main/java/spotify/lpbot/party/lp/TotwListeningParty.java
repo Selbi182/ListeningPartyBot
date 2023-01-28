@@ -12,10 +12,10 @@ import spotify.lpbot.party.data.TotwData;
 import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
 import spotify.util.BotUtils;
 
-public class TotwParty extends AbstractListeningParty{
+public class TotwListeningParty extends AbstractListeningParty{
   private final TotwTrackListWrapper totwTrackListWrapper;
 
-  public TotwParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper) {
+  public TotwListeningParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper) {
     super(channel, totwTrackListWrapper);
     this.totwTrackListWrapper = totwTrackListWrapper;
   }
@@ -25,7 +25,7 @@ public class TotwParty extends AbstractListeningParty{
   }
 
   @Override
-  EmbedBuilder createDiscordEmbedForTrack(Track track) {
+  protected EmbedBuilder createDiscordEmbedForTrack(Track track) {
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
     TotwData.Entry currentTotwEntry = getCurrentTotwEntry();
@@ -60,7 +60,7 @@ public class TotwParty extends AbstractListeningParty{
       String writeUp = Arrays.stream(currentTotwEntry.getWriteUp().split("\n"))
         .map(String::trim)
         .collect(Collectors.joining("\n> "));
-      embed.setDescription(String.format("**Write-up:**\n> *\u201C%s\u201D*", writeUp));
+      embed.setDescription(String.format("**Write-up:**\n> *%s*", writeUp));
     }
 
     // Field info

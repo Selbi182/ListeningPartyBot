@@ -1,19 +1,23 @@
 package spotify.lpbot.party.registry;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.javacord.api.entity.Attachment;
 import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.springframework.stereotype.Service;
 
 import spotify.lpbot.discord.util.DiscordUtils;
+import spotify.lpbot.party.data.TotwData;
+import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
 import spotify.lpbot.party.lp.AbstractListeningParty;
 import spotify.lpbot.party.lp.StandardListeningParty;
-import spotify.lpbot.party.lp.TotwParty;
+import spotify.lpbot.party.lp.TotwListeningParty;
 import spotify.lpbot.party.service.TotwCreationService;
 import spotify.lpbot.party.service.TrackListCreationService;
 
@@ -24,7 +28,7 @@ public class ChannelRegistry {
 
   private final Map<Long, AbstractListeningParty> lpInstancesForChannelId;
 
-  public ChannelRegistry(TrackListCreationService trackListCreationService, TotwCreationService totwPlaylistService) {
+  ChannelRegistry(TrackListCreationService trackListCreationService, TotwCreationService totwPlaylistService) {
     this.trackListCreationService = trackListCreationService;
     this.totwPlaylistService = totwPlaylistService;
     this.lpInstancesForChannelId = new ConcurrentHashMap<>();
@@ -45,35 +49,37 @@ public class ChannelRegistry {
 
   public void register(TextChannel channel, InteractionOriginalResponseUpdater responder, String potentialUrl) {
     if (!isRegistered(channel) || lpInstancesForChannelId.get(channel.getId()).isOverwritable()) {
-      trackListCreationService.verifyUriAndCreateTarget(potentialUrl)
+      trackListCreationService.verifyUriAndCreateTarget(potentialUrl) // todo limit at 200 tracks or 10h
         .ifPresentOrElse(trackListWrapper -> {
           StandardListeningParty simpleListeningParty = new StandardListeningParty(channel, trackListWrapper);
           lpInstancesForChannelId.put(channel.getId(), simpleListeningParty);
-          responder.addEmbed(DiscordUtils.createSimpleEmbed("Listening Party link set! Type `/start` to begin the session")).update();
+          DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session");
         },
-        () -> responder.addEmbed(DiscordUtils.createErrorEmbed("The provided URL is invalid (no Spotify album/playlist detected or malformed formatting)")).update());
+        () -> DiscordUtils.updateWithErrorEmbed(responder, "The provided URL is invalid (no Spotify album/playlist detected or malformed formatting)"));
     } else {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("A Listening Party is currently in progress for this channel. `/stop` it first!")).update();
+      DiscordUtils.updateWithErrorEmbed(responder, "A Listening Party is currently in progress for this channel. `/stop` it first!");
     }
   }
 
   public void registerTotw(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment totwData) {
     if (!isRegistered(channel) || lpInstancesForChannelId.get(channel.getId()).isOverwritable()) {
-      totwPlaylistService.parseAttachmentFile(totwData)
-        .flatMap(totwPlaylistService::findOrCreateTotwPlaylist)
-        .ifPresentOrElse(totwTrackListWrapper -> {
-          TotwParty totwParty = new TotwParty(channel, totwTrackListWrapper);
-          lpInstancesForChannelId.put(channel.getId(), totwParty);
-          responder.addEmbed(DiscordUtils.createSimpleEmbed("Listening Party link set! Type `/start` to begin the session")).update();
-        },
-        () -> responder.addEmbed(DiscordUtils.createErrorEmbed("Failed to create TOTW playlist")).update());
+      try {
+        TotwData parsedTotwData = totwPlaylistService.parseAttachmentFile(totwData);
+        TotwTrackListWrapper totwTrackListWrapper = totwPlaylistService.findOrCreateTotwPlaylist(parsedTotwData);
+        TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper);
+        lpInstancesForChannelId.put(channel.getId(), totwParty);
+        String participants = String.join(", ", parsedTotwData.getParticipants());
+        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session\n\n**Participants:**\n" + participants);
+      } catch (IOException e) {
+        e.printStackTrace();
+        DiscordUtils.updateWithErrorEmbed(responder, "Couldn't parse TOTW data or failed to create/refresh TOTW playlist. Likely caused by an unknown last.fm username or malformed JSON");
+      }
     } else {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("A Listening Party is currently in progress for this channel")).update();
+      DiscordUtils.updateWithErrorEmbed(responder, "A Listening Party is currently in progress for this channel");
     }
   }
 
   private void sendGenericUnsetError(InteractionOriginalResponseUpdater responder) {
-    EmbedBuilder errorEmbed = DiscordUtils.createErrorEmbed("There is currently no Listening Party set for this channel!\n\nUse `/set <link>` to set it");
-    responder.addEmbed(errorEmbed).update();
+    DiscordUtils.updateWithErrorEmbed(responder, "There is currently no Listening Party set for this channel!\n\nUse `/set <link>` to set it");
   }
 }

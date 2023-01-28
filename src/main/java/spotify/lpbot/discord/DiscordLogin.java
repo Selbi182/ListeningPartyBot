@@ -26,7 +26,7 @@ public class DiscordLogin {
 
   private final DiscordMessageHandler discordMessageHandler;
 
-  public DiscordLogin(DiscordMessageHandler discordMessageHandler) {
+  DiscordLogin(DiscordMessageHandler discordMessageHandler) {
     this.discordMessageHandler = discordMessageHandler;
   }
 

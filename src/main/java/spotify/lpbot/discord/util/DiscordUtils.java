@@ -1,45 +1,19 @@
 package spotify.lpbot.discord.util;
 
 import java.awt.Color;
+import java.util.concurrent.CompletableFuture;
 
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
 public class DiscordUtils {
-  private DiscordUtils() {}
-
-  /**
-   * Print the given message to the given channel in bold
-   */
-  @Deprecated
-  public static void sendMessage(TextChannel channel, String text) {
-    sendMessage(channel, text, true);
+  private DiscordUtils() {
   }
 
-  /**
-   * Print the given message to the given channel, with an optional flag to make it bold or not
-   */
-  @Deprecated
-  public static void sendMessage(TextChannel channel, String text, boolean bold) {
-    String content = bold ? "**" + text + "**" : text;
-    channel.sendMessage(content);
-  }
-
-  /**
-   * Respond to the given responder with the given text in bold
-   */
-  public static void sendResponse(InteractionImmediateResponseBuilder responder, String text) {
-    sendResponse(responder, text, true);
-  }
-
-  /**
-   * Respond to the given responder with the given text, with an optional flag to make it bold or not
-   */
-  public static void sendResponse(InteractionImmediateResponseBuilder responder, String text, boolean bold) {
-    String content = bold ? "**" + text + "**" : text;
-    responder.setContent(content).respond();
-  }
+  ////////////////
+  // Builders
 
   /**
    * Create a simple embed with only the description set
@@ -76,11 +50,50 @@ public class DiscordUtils {
     return createSimpleEmbed("**ERROR:** " + content, Color.RED, false);
   }
 
+  ////////////////
+  // Send Embed
+
   /**
    * Create and send a simple embed to the given channel
    */
   public static void sendSimpleEmbed(TextChannel textChannel, String content) {
-    EmbedBuilder simpleEmbed = createSimpleEmbed(content);
-    textChannel.sendMessage(simpleEmbed);
+    textChannel.sendMessage(createSimpleEmbed(content));
   }
+
+  ////////////////
+  // Update Embed
+
+  /**
+   * Respond the given InteractionOriginalResponseUpdater with a simple embed
+   */
+  public static void updateWithSimpleEmbed(InteractionOriginalResponseUpdater responder, String content) {
+    respondWithEmbed(responder, createSimpleEmbed(content));
+  }
+
+  /**
+   * Respond the given InteractionOriginalResponseUpdater with an error embed
+   */
+  public static void updateWithErrorEmbed(InteractionOriginalResponseUpdater responder, String content) {
+    respondWithEmbed(responder, createErrorEmbed(content));
+  }
+
+  ////////////////
+  // Response
+
+  /**
+   * Respond to the given InteractionOriginalResponseUpdater with a simple message
+   * @return the updated message in case further stuff needs to be done with it
+   */
+  public static CompletableFuture<Message> respondWithMessage(InteractionOriginalResponseUpdater responder, String message) {
+    return responder.setContent(message).update();
+  }
+
+  /**
+   * Respond with a custom embed
+   * @return the updated message in case further stuff needs to be done with it
+   */
+  public static CompletableFuture<Message> respondWithEmbed(InteractionOriginalResponseUpdater responder, EmbedBuilder embed) {
+    return responder.addEmbed(embed).update();
+  }
+
 }

@@ -22,8 +22,8 @@ public class DiscordMessageHandler {
 
   private final ChannelRegistry lpChannelRegistry;
 
-  public DiscordMessageHandler(ChannelRegistry lpChannelRegistry) {
-     this.lpChannelRegistry = lpChannelRegistry;
+  DiscordMessageHandler(ChannelRegistry lpChannelRegistry) {
+    this.lpChannelRegistry = lpChannelRegistry;
   }
 
   public void processSlashCommand(SlashCommandCreateEvent slashCommandCreateEvent) {
@@ -31,56 +31,72 @@ public class DiscordMessageHandler {
     User user = slashCommandInteraction.getUser();
     if (SpamProtector.checkAuthorOkay(user)) {
       slashCommandInteraction.getChannel()
-        .ifPresent(channel -> {
-          InteractionOriginalResponseUpdater responder = slashCommandInteraction.respondLater().join();
-          String command = slashCommandInteraction.getFullCommandName();
-          switch (command) {
-            case "start":
-              Optional<SlashCommandInteractionOption> optionalCountdown = slashCommandInteraction.getOptionByName("countdown");
-              getCountdownSeconds(optionalCountdown)
-                .ifPresentOrElse(countdown -> lpChannelRegistry
-                  .getExistingLPInstance(channel, responder)
-                  .ifPresent(lp -> lp.start(responder, countdown)),
-                () -> responder.addEmbed(DiscordUtils.createErrorEmbed("Custom countdown must be between 0-30 seconds")).update());
-              break;
-            case "stop":
-              lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.stop(responder));
-              break;
-            case "skip":
-              Optional<SlashCommandInteractionOption> optionalSkipAmount = slashCommandInteraction.getOptionByName("amount");
-              getSkipAmount(optionalSkipAmount)
-                .ifPresentOrElse(skipAmount -> lpChannelRegistry
-                  .getExistingLPInstance(channel, responder)
-                  .ifPresent(lp -> lp.skip(responder, skipAmount)),
-                () -> responder.addEmbed(DiscordUtils.createErrorEmbed("Invalid skip amount")).update());
-              break;
-            case "pause":
-              lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.pause(responder));
-              break;
-            case "nowplaying":
-              lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.nowPlaying(responder));
-              break;
-            case "set":
-              slashCommandInteraction.getOptionByName("url")
-                .map(SlashCommandInteractionOption::getStringValue)
-                .map(Optional::get)
-                .ifPresent(url -> lpChannelRegistry.register(channel, responder, url));
-              break;
-            case "link":
-              lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.link(responder));
-              break;
-            case "totw":
-              slashCommandInteraction.getArgumentAttachmentValueByName("attachment")
-                .ifPresent(attachment -> lpChannelRegistry.registerTotw(channel, responder, attachment));
-              break;
-            case "help":
-              sendHelpEmbed(responder);
-              break;
-            default:
-              sendBasicUsageEmbed(responder);
-              break;
-          }
-        });
+          .ifPresent(channel -> {
+            InteractionOriginalResponseUpdater responder = slashCommandInteraction.respondLater().join();
+            String command = slashCommandInteraction.getFullCommandName();
+            try {
+              switch (command) {
+              case "set":
+                slashCommandInteraction.getOptionByName("url")
+                    .map(SlashCommandInteractionOption::getStringValue)
+                    .map(Optional::get)
+                    .ifPresent(url -> lpChannelRegistry.register(channel, responder, url));
+                break;
+              case "start":
+                Optional<SlashCommandInteractionOption> optionalCountdown = slashCommandInteraction.getOptionByName("countdown");
+                getCountdownSeconds(optionalCountdown)
+                    .ifPresentOrElse(countdown -> lpChannelRegistry
+                            .getExistingLPInstance(channel, responder)
+                            .ifPresent(lp -> lp.start(responder, countdown)),
+                        () -> DiscordUtils.updateWithErrorEmbed(responder, "Custom countdown must be between 0-30 seconds"));
+                break;
+              case "stop":
+                lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.stop(responder));
+                break;
+              case "next":
+                Optional<SlashCommandInteractionOption> optionalSkipAmount = slashCommandInteraction.getOptionByName("amount");
+                getSkipAmount(optionalSkipAmount)
+                    .ifPresentOrElse(skipAmount -> lpChannelRegistry
+                            .getExistingLPInstance(channel, responder)
+                            .ifPresent(lp -> lp.next(responder, skipAmount)),
+                        () -> DiscordUtils.updateWithErrorEmbed(responder, "Invalid amount"));
+                break;
+              case "previous":
+                Optional<SlashCommandInteractionOption> optionalGoBackAmount = slashCommandInteraction.getOptionByName("amount");
+                getSkipAmount(optionalGoBackAmount)
+                    .ifPresentOrElse(goBackAmount -> lpChannelRegistry
+                            .getExistingLPInstance(channel, responder)
+                            .ifPresent(lp -> lp.previous(responder, goBackAmount)),
+                        () -> DiscordUtils.updateWithErrorEmbed(responder, "Invalid amount"));
+                break;
+              case "pause":
+                lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.pause(responder));
+                break;
+              case "restart":
+                lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.restart(responder));
+                break;
+              case "nowplaying":
+                lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.nowPlaying(responder));
+                break;
+              case "link":
+                lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.link(responder));
+                break;
+              case "totw":
+                slashCommandInteraction.getArgumentAttachmentValueByName("attachment")
+                    .ifPresent(attachment -> lpChannelRegistry.registerTotw(channel, responder, attachment));
+                break;
+              case "help":
+                sendHelpEmbed(responder);
+                break;
+              default:
+                sendBasicUsageEmbed(responder);
+                break;
+              }
+            } catch (Exception e) {
+              e.printStackTrace();
+              DiscordUtils.updateWithErrorEmbed(responder, "An internal server error occurred");
+            }
+          });
     }
   }
 
@@ -90,13 +106,13 @@ public class DiscordMessageHandler {
     for (DiscordSlashCommands.LPBotCommand command : DiscordSlashCommands.getCommands()) {
       helpEmbed.addField(String.format("`/%s`", command.getCommandWithSubCommand()), "> " + command.getFullDescription());
     }
-    responder.addEmbed(helpEmbed).update();
+    DiscordUtils.respondWithEmbed(responder, helpEmbed);
   }
 
   private void sendBasicUsageEmbed(InteractionOriginalResponseUpdater responder) {
     EmbedBuilder basicUsageEmbed = new EmbedBuilder();
     basicUsageEmbed.setDescription("`/<command>`\n\nSee `/sendHelpEmbed` for more information");
-    responder.addEmbed(basicUsageEmbed).update();
+    DiscordUtils.respondWithEmbed(responder, basicUsageEmbed);
   }
 
   public static Optional<Integer> getCountdownSeconds(Optional<SlashCommandInteractionOption> customCountdownSeconds) {

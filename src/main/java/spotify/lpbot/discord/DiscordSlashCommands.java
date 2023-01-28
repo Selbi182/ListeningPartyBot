@@ -12,25 +12,27 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 import com.google.common.collect.ImmutableSet;
 
 public class DiscordSlashCommands {
-  public final static List<LPBotCommand> commands = List.of(
+  private final static List<LPBotCommand> DISCORD_SLASH_COMMANDS = List.of(
+    LPBotCommand.of("set", "Set the target link", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
     LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down, default: 5", false)),
     LPBotCommand.of("stop", "Cancel a current Listening Party and reset it to the beginning"),
-    LPBotCommand.of("skip", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
+    LPBotCommand.of("next", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to next, default: 1", false)),
+    LPBotCommand.of("previous", "Play the previous song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to go back, default: 1", false)),
+    LPBotCommand.of("restart", "Restart the currently playing song"),
     LPBotCommand.of("pause", "Pause the current Listening Party (resume by typing `/start` again)"),
     LPBotCommand.of("nowplaying", "Print info of the current Listening Party for this channel"),
     LPBotCommand.of("link", "Print the set target link"),
-    LPBotCommand.of("set", "Set the target link", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
     LPBotCommand.of("help", "Print the commands as chat message"),
     LPBotCommand.of("totw", "[Experimental] Host a Track-of-the-Week party", SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the TOTW info data", true))
   );
 
   public static List<LPBotCommand> getCommands() {
-    return commands;
+    return DISCORD_SLASH_COMMANDS;
   }
 
   public static Set<SlashCommandBuilder> getSlashCommands () {
     ImmutableSet.Builder<SlashCommandBuilder> builder = ImmutableSet.builder();
-    for (LPBotCommand command : commands) {
+    for (LPBotCommand command : DISCORD_SLASH_COMMANDS) {
       builder.add(command.getSubCommand()
         .map(subCommand -> SlashCommand.with(command.getCommand(), command.getDescription(), List.of(subCommand)))
         .orElse(SlashCommand.with(command.getCommand(), command.getDescription())));

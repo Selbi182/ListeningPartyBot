@@ -3,7 +3,6 @@ package spotify.lpbot.party.data;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TotwData {
@@ -19,10 +18,11 @@ public class TotwData {
     return headline;
   }
 
-  public Set<String> getParticipants() {
+  public List<String> getParticipants() {
     return totwEntries.stream()
       .map(Entry::getName)
-      .collect(Collectors.toSet());
+      .distinct()
+      .collect(Collectors.toList());
   }
 
   public List<TotwData.Entry> getTotwEntries() {

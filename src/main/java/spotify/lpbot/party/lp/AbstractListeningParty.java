@@ -1,6 +1,9 @@
 package spotify.lpbot.party.lp;
 
 import java.awt.Color;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -46,70 +49,106 @@ public abstract class AbstractListeningParty {
     this.state = State.READY;
   }
 
+  public boolean isOverwritable() {
+    return isState(State.READY);
+  }
+
   public void start(InteractionOriginalResponseUpdater responder, int countdown) {
-    if (State.READY.equals(state)) {
+    if (isState(State.READY)) {
       EmbedBuilder countdownEmbed = DiscordUtils.createSimpleEmbed("The Listening Party begins in...", true);
       remainingTimeAtTimeOfPause = null;
       state = State.COUNTDOWN;
       createAndStartCountdown(responder, countdownEmbed, countdown, false);
-    } else if (state.equals(State.PAUSED)) {
+    } else if (isState(State.PAUSED)) {
       EmbedBuilder resumeEmbed = DiscordUtils.createSimpleEmbed("Resuming Listening Party in...", true);
       state = State.RESUME_COUNTDOWN;
       createAndStartCountdown(responder, resumeEmbed, countdown, true);
     } else {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("Listening Party is already active")).update();
+      DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is already active");
     }
   }
 
   public void stop(InteractionOriginalResponseUpdater responder) {
-    if (State.COUNTDOWN.equals(state) || State.RESUME_COUNTDOWN.equals(state) || State.ONGOING.equals(state) || State.PAUSED.equals(state)) {
+    if (isState(State.COUNTDOWN, State.RESUME_COUNTDOWN, State.ONGOING, State.PAUSED)) {
       nextFuture.cancel(true);
       state = State.READY;
       currentTrackListIndex = 0;
       remainingTimeAtTimeOfPause = null;
-      responder.addEmbed(DiscordUtils.createSimpleEmbed("Listening Party stopped!")).update();
+      DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party stopped!");
     } else {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("Listening Party is not active")).update();
+      DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active");
     }
   }
 
-  public void skip(InteractionOriginalResponseUpdater responder, int skipAmount) {
+  public void next(InteractionOriginalResponseUpdater responder, int skipAmount) {
     int maxSkipAmount = getTotalTrackCount() - getCurrentTrackListIndex();
     int skipAmountLimited = Math.min(skipAmount, maxSkipAmount);
-    if (State.ONGOING.equals(state)) {
+    if (isState(State.ONGOING)) {
       nextFuture.cancel(true);
       currentTrackListIndex += skipAmountLimited;
       printNextSong();
-      responder.addEmbed(DiscordUtils.createSimpleEmbed(skipAmountLimited + " song(s) skipped!")).update();
-    } else if (State.COUNTDOWN.equals(state) || State.RESUME_COUNTDOWN.equals(state)) {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("Countdowns can't be skipped")).update();
-    } else if (State.PAUSED.equals(state) || State.READY.equals(state)) {
+      DiscordUtils.updateWithSimpleEmbed(responder, skipAmountLimited + " song(s) skipped!");
+    } else if (isState(State.COUNTDOWN, State.RESUME_COUNTDOWN)) {
+      DiscordUtils.updateWithErrorEmbed(responder, "Countdowns can't be skipped");
+    } else if (isState(State.PAUSED, State.READY)) {
       currentTrackListIndex += skipAmountLimited;
       remainingTimeAtTimeOfPause = null;
       nowPlaying(responder);
-      responder.addEmbed(DiscordUtils.createSimpleEmbed(skipAmountLimited + " song(s) skipped! (Note: Listening Party is still paused. Use `/start` to resume)")).update();
+      DiscordUtils.updateWithSimpleEmbed(responder, skipAmountLimited + " song(s) skipped! (Note: Listening Party is still paused. Use `/start` to resume)");
     } else {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("Listening Party is not active")).update();
+      DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active");
+    }
+  }
+
+  public void previous(InteractionOriginalResponseUpdater responder, int goBackAmount) {
+    int goBackAmountLimited = Math.max(0, Math.min(goBackAmount, getCurrentTrackListIndex()));
+    if (isState(State.ONGOING)) {
+      nextFuture.cancel(true);
+      currentTrackListIndex -= goBackAmountLimited;
+      printNextSong();
+      DiscordUtils.updateWithSimpleEmbed(responder, "Went back " + goBackAmountLimited + " song(s)!");
+    } else if (isState(State.COUNTDOWN, State.RESUME_COUNTDOWN)) {
+      DiscordUtils.updateWithErrorEmbed(responder, "There is nothing before the countdown");
+    } else if (isState(State.PAUSED, State.READY)) {
+      currentTrackListIndex -= goBackAmountLimited;
+      remainingTimeAtTimeOfPause = null;
+      nowPlaying(responder);
+      DiscordUtils.updateWithSimpleEmbed(responder, "Went back " + goBackAmountLimited + " song(s)! (Note: Listening Party is still paused. Use `/start` to resume)");
+    } else {
+      DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active");
     }
   }
 
   public void pause(InteractionOriginalResponseUpdater responder) {
-    if (State.ONGOING.equals(state)) {
+    if (isState(State.ONGOING)) {
       nextFuture.cancel(true);
       remainingTimeAtTimeOfPause = nextFuture.getDelay(TimeUnit.MILLISECONDS);
       state = State.PAUSED;
       nowPlaying(responder);
-    } else if (State.PAUSED.equals(state)) {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("Listening Party is already paused")).update();
+    } else if (isState(State.PAUSED)) {
+      DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is already paused");
     } else {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("Listening Party is not active or can't be paused right now")).update();
+      DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active or can't be paused right now");
+    }
+  }
+
+  public void restart(InteractionOriginalResponseUpdater responder) {
+    if (isState(State.ONGOING)) {
+      nextFuture.cancel(true);
+      prepareNextSong(getCurrentTrack());
+      nowPlaying(responder);
+    } else if (isState(State.PAUSED)) {
+      remainingTimeAtTimeOfPause = null;
+      DiscordUtils.updateWithSimpleEmbed(responder, "Song restarted! (Note: Listening Party is still paused. Use `/start` to resume)");
+    } else {
+      DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active or can't be interacted with right now");
     }
   }
 
   public void nowPlaying(InteractionOriginalResponseUpdater responder) {
-    if (State.ONGOING.equals(state) || State.PAUSED.equals(state) || State.READY.equals(state)) {
+    if (isState(State.ONGOING, State.PAUSED, State.READY)) {
       if (getCurrentTrackListIndex() < getTotalTrackCount()) {
-        Track currentTrack = getTrackListWrapper().getTracks().get(Math.min(getCurrentTrackListIndex(), getTotalTrackCount() - 1));
+        Track currentTrack = getAllTracks().get(Math.min(getCurrentTrackListIndex(), getTotalTrackCount() - 1));
 
         EmbedBuilder nowPlayingEmbed = new EmbedBuilder();
 
@@ -135,24 +174,25 @@ public abstract class AbstractListeningParty {
         }
         nowPlayingEmbed.addField("Timestamp:", BotUtils.formatTime(passedTime) + " / " + BotUtils.formatTime(songLength) + (paused ? " *(Paused)*" : ""), true);
 
-        if (!paused) {
-          nowPlayingEmbed.setFooter("(Timestamp will stop updating in 60 seconds!)");
-          // todo periodic updating of the timestamp (for a while, not sure how long yet)
-        }
+//        if (!paused) {
+//          // todo periodic updating of the timestamp (for a while, not sure how long yet)
+//          nowPlayingEmbed.setFooter("(Timestamp will stop updating in 60 seconds!)");
+//        }
 
-        responder.addEmbed(nowPlayingEmbed).update();
+        DiscordUtils.respondWithEmbed(responder, nowPlayingEmbed);
       } else {
         printFinalMessage();
       }
-    } else if (State.COUNTDOWN.equals(state) || State.RESUME_COUNTDOWN.equals(state)) {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("Wait for the countdown to finish")).update();
+    } else if (isState(State.COUNTDOWN, State.RESUME_COUNTDOWN)) {
+      DiscordUtils.updateWithErrorEmbed(responder, "Wait for the countdown to finish");
     } else {
-      responder.addEmbed(DiscordUtils.createErrorEmbed("No active Listening Party")).update();
+      DiscordUtils.updateWithErrorEmbed(responder, "No active Listening Party");
     }
   }
 
   public void link(InteractionOriginalResponseUpdater responder) {
-    responder.setContent(getTrackListWrapper().getLink()).update();
+    // Must be a simple message instead of an embed, otherwise the Spotify preview won't work
+    DiscordUtils.respondWithMessage(responder, getTrackListWrapper().getLink());
   }
 
   ////////////////////
@@ -160,19 +200,23 @@ public abstract class AbstractListeningParty {
   private void printNextSong() {
     if (getCurrentTrackListIndex() < getTotalTrackCount()) {
       // Send info about current song to channel
-      Track currentTrack = getTrackListWrapper().getTracks().get(getCurrentTrackListIndex());
+      Track currentTrack = getCurrentTrack();
       EmbedBuilder discordEmbedForTrack = createDiscordEmbedForTrack(currentTrack);
       channel.sendMessage(discordEmbedForTrack);
 
       // Prepare the next song
-      this.nextFuture = scheduledExecutorService.schedule(() -> {
-        currentTrackListIndex++;
-        printNextSong();
-      }, currentTrack.getDurationMs(), TimeUnit.MILLISECONDS);
+      prepareNextSong(currentTrack);
     } else {
       // This was the final song. End it
       printFinalMessage();
     }
+  }
+
+  private void prepareNextSong(Track currentTrack) {
+    this.nextFuture = scheduledExecutorService.schedule(() -> {
+      currentTrackListIndex++;
+      printNextSong();
+    }, currentTrack.getDurationMs(), TimeUnit.MILLISECONDS);
   }
 
   private void printFinalMessage() {
@@ -181,8 +225,8 @@ public abstract class AbstractListeningParty {
     DiscordUtils.sendSimpleEmbed(channel, "\uD83C\uDF89 This Listening Party is over. Thank you for joining! \uD83C\uDF8A");
   }
 
-  public void createAndStartCountdown(InteractionOriginalResponseUpdater responder, EmbedBuilder countdownEmbed, int countdown, boolean resume) {
-    Message message = responder.addEmbed(countdownEmbed).update().join();
+  private void createAndStartCountdown(InteractionOriginalResponseUpdater responder, EmbedBuilder countdownEmbed, int countdown, boolean resume) {
+    Message message = DiscordUtils.respondWithEmbed(responder, countdownEmbed).join();
     AtomicInteger atomicCountdown = new AtomicInteger(countdown);
     this.nextFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
       int i = atomicCountdown.getAndDecrement();
@@ -198,7 +242,7 @@ public abstract class AbstractListeningParty {
         if (resume) {
           long delayAfterPause;
           if (remainingTimeAtTimeOfPause == null) {
-            delayAfterPause = getTrackListWrapper().getTracks().get(getCurrentTrackListIndex()).getDurationMs();
+            delayAfterPause = getCurrentTrack().getDurationMs();
           } else {
             delayAfterPause = remainingTimeAtTimeOfPause;
           }
@@ -211,31 +255,43 @@ public abstract class AbstractListeningParty {
     }, COUNTDOWN_INTERVAL_MS, COUNTDOWN_INTERVAL_MS, TimeUnit.MILLISECONDS);
   }
 
+  ////////////////////
+  // Util
 
-  public boolean isOverwritable() {
-    return State.READY.equals(state);
+  protected boolean isState(State... states) {
+    return Arrays.stream(states).anyMatch(state -> Objects.equals(state, this.state));
   }
 
-  int getCurrentTrackListIndex() {
+  protected int getCurrentTrackListIndex() {
     return currentTrackListIndex;
   }
 
-  int getCurrentTrackNumber() {
+  protected List<Track> getAllTracks() {
+    return getTrackListWrapper().getTracks();
+  }
+
+  protected Track getCurrentTrack() {
+    return getAllTracks().get(getCurrentTrackListIndex());
+  }
+
+  protected int getCurrentTrackNumber() {
     return getCurrentTrackListIndex() + 1;
   }
 
-  int getTotalTrackCount() {
-    return getTrackListWrapper().getTracks().size();
+  protected int getTotalTrackCount() {
+    return getAllTracks().size();
   }
-  
-  Color getColorForCurrentTrack() {
+
+  protected Color getColorForCurrentTrack() {
     return getTrackListWrapper().getColorByTrackIndex(getCurrentTrackListIndex());
   }
 
-  TrackListWrapper getTrackListWrapper() {
+  protected TrackListWrapper getTrackListWrapper() {
     return trackListWrapper;
   }
 
+  ////////////////////
   // Abstract Discord logic
-  abstract EmbedBuilder createDiscordEmbedForTrack(Track track);
+
+  protected abstract EmbedBuilder createDiscordEmbedForTrack(Track track);
 }

@@ -29,7 +29,7 @@ public class TrackListCreationService {
   private final SpotifyApi spotifyApi;
   private final ColorService colorService;
 
-  public TrackListCreationService(SpotifyApi spotifyApi, ColorService colorService) {
+  TrackListCreationService(SpotifyApi spotifyApi, ColorService colorService) {
     this.spotifyApi = spotifyApi;
     this.colorService = colorService;
   }
