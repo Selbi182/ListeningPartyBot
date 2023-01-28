@@ -16,7 +16,7 @@ import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.springframework.stereotype.Component;
 
-import spotify.lpbot.party.data.LPInstance;
+import spotify.lpbot.discord.util.DiscordUtils;
 
 @Component
 public class DiscordCountdownHandler {
@@ -32,7 +32,7 @@ public class DiscordCountdownHandler {
     this.countdownFutures = new ConcurrentHashMap<>();
   }
 
-  public Optional<Integer> getCountdownSeconds(Optional<SlashCommandInteractionOption> customCountdownSeconds) {
+  public static Optional<Integer> getCountdownSeconds(Optional<SlashCommandInteractionOption> customCountdownSeconds) {
     int countdown = Math.toIntExact(customCountdownSeconds
         .map(SlashCommandInteractionOption::getLongValue)
         .map(Optional::get)
@@ -66,9 +66,5 @@ public class DiscordCountdownHandler {
       }
     }, COUNTDOWN_INTERVAL_MS, COUNTDOWN_INTERVAL_MS, TimeUnit.MILLISECONDS);
     countdownFutures.put(channel.getId(), future);
-  }
-
-  public boolean isCountingDown(LPInstance lp) {
-    return countdownFutures.containsKey(lp.getTextChannel().getId());
   }
 }

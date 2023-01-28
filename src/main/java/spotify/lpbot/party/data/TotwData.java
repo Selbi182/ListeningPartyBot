@@ -1,49 +1,52 @@
-package spotify.lpbot.party.totw;
+package spotify.lpbot.party.data;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-public class TotwEntity {
+public class TotwData {
   private final String headline;
-  private final List<String> participants;
-  private final List<Partial> totwEntities;
+  private final List<TotwData.Entry> totwEntries;
 
-  public TotwEntity(String headline, List<String> participants, List<Partial> totwEntities) {
+  public TotwData(String headline, List<TotwData.Entry> totwEntries) {
     this.headline = headline;
-    this.participants = participants;
-    this.totwEntities = totwEntities;
+    this.totwEntries = totwEntries;
   }
 
   public String getHeadline() {
     return headline;
   }
 
-  public List<String> getParticipants() {
-    return participants;
+  public Set<String> getParticipants() {
+    return totwEntries.stream()
+      .map(Entry::getName)
+      .collect(Collectors.toSet());
   }
 
-  public List<Partial> getTotwEntities() {
-    return totwEntities;
+  public List<TotwData.Entry> getTotwEntries() {
+    return totwEntries;
   }
 
-  public static class Partial {
+  public static class Entry {
+    // Entry data (taken from the submission form)
     private final String name;
     private final String lastFmName;
     private final String spotifyLink;
     private final String writeUp;
-    private final int ordinal;
 
-    public Partial(Partial clone) {
-      this(clone.getName(), clone.getLastFmName(), clone.getSpotifyLink(), clone.getWriteUp(), clone.getOrdinal());
-    }
+    // Full data (taken from the last.fm API)
+    private String songLinkUrl;
+    private String userPageUrl;
+    private String profilePictureUrl;
+    private Integer scrobbleCount;
 
-    public Partial(String name, String lastFmName, String spotifyLink, String writeUp, int ordinal) {
+    public Entry(String name, String lastFmName, String spotifyLink, String writeUp) {
       this.name = name;
       this.lastFmName = lastFmName;
       this.spotifyLink = spotifyLink;
       this.writeUp = writeUp;
-      this.ordinal = ordinal;
     }
 
     public String getName() {
@@ -62,31 +65,7 @@ public class TotwEntity {
       return writeUp;
     }
 
-    public int getOrdinal() {
-      return ordinal;
-    }
-
-    public String getSongId() {
-      try {
-        URL url = new URL(getSpotifyLink());
-        String path = url.getPath();
-        return path.substring(path.lastIndexOf('/') + 1);
-      } catch (MalformedURLException e) {
-        e.printStackTrace();
-        return "";
-      }
-    }
-  }
-
-  public static class Full extends Partial {
-    private String songLinkUrl;
-    private String userPageUrl;
-    private String profilePictureUrl;
-    private Integer scrobbleCount;
-
-    public Full(Partial lpEntity) {
-      super(lpEntity);
-    }
+    ////////////////////////////
 
     public void setSongLinkUrl(String songLinkUrl) {
       this.songLinkUrl = songLinkUrl;
@@ -119,5 +98,17 @@ public class TotwEntity {
     public Integer getScrobbleCount() {
       return scrobbleCount;
     }
+
+    public String getSongId() {
+      try {
+        URL url = new URL(getSpotifyLink());
+        String path = url.getPath();
+        return path.substring(path.lastIndexOf('/') + 1);
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+        return "";
+      }
+    }
   }
+
 }

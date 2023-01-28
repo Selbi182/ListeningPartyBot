@@ -1,4 +1,4 @@
-package spotify.lpbot.misc.color;
+package spotify.lpbot.party.data;
 
 import java.awt.Color;
 

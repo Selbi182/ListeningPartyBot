@@ -1,4 +1,4 @@
-package spotify.lpbot.lastfm;
+package spotify.lpbot.party.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,32 +13,32 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import spotify.api.SpotifyCall;
-import spotify.lpbot.party.totw.TotwEntity;
+import spotify.lpbot.party.data.TotwData;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.util.BotLogger;
 import spotify.util.BotUtils;
 
 @Component
-public class LastFmDataHandler {
+public class LastFmService {
 
   private final SpotifyApi spotifyApi;
   private final BotLogger log;
 
   private UriComponentsBuilder lastFmApiUrl;
 
-  public LastFmDataHandler(SpotifyApi spotifyApi, BotLogger botLogger) {
+  public LastFmService(SpotifyApi spotifyApi, BotLogger botLogger) {
     this.spotifyApi = spotifyApi;
     this.log = botLogger;
 
     try {
       String lastFmApiToken = readToken();
       this.lastFmApiUrl = UriComponentsBuilder.newInstance()
-          .scheme("http")
-          .host("ws.audioscrobbler.com")
-          .path("/2.0")
-          .queryParam("api_key", lastFmApiToken)
-          .queryParam("format", "json");
+        .scheme("http")
+        .host("ws.audioscrobbler.com")
+        .path("/2.0")
+        .queryParam("api_key", lastFmApiToken)
+        .queryParam("format", "json");
     } catch (IOException e) {
       log.error("Failed to start bot! (Couldn't read last.fm token). Terminating...");
       e.printStackTrace();
@@ -46,34 +46,31 @@ public class LastFmDataHandler {
     }
   }
 
-  public TotwEntity.Full attachLastFmData(TotwEntity.Partial totwEntity) {
-    TotwEntity.Full lpEntityWithLastFmData = new TotwEntity.Full(totwEntity);
-
-    String lastFmName = totwEntity.getLastFmName();
+  public void attachLastFmData(TotwData.Entry totwEntryPartial) {
+    String lastFmName = totwEntryPartial.getLastFmName();
     try {
       // User info
       String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lastFmName);
       JsonObject user = executeRequest(lastFmApiUrlForUserInfo, "user");
       String userPageUrl = user.get("url").getAsString();
-      lpEntityWithLastFmData.setUserPageUrl(userPageUrl);
+      totwEntryPartial.setUserPageUrl(userPageUrl);
       String userImageUrl = user.get("image").getAsJsonArray().get(0).getAsJsonObject().get("#text").getAsString();
-      lpEntityWithLastFmData.setProfilePictureUrl(userImageUrl);
+      totwEntryPartial.setProfilePictureUrl(userImageUrl);
 
       // Track info
-      Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntity.getSongId()));
+      Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntryPartial.getSongId()));
       String artistName = BotUtils.getFirstArtistName(spotifyTrack);
       String trackName = spotifyTrack.getName();
       String url = assembleLastFmApiUrlForTrackGetInfo(lastFmName, artistName, trackName);
       JsonObject jsonTrack = executeRequest(url, "track");
       String songUrl = jsonTrack.get("url").getAsString();
-      lpEntityWithLastFmData.setSongLinkUrl(songUrl);
+      totwEntryPartial.setSongLinkUrl(songUrl);
       int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
-      lpEntityWithLastFmData.setScrobbleCount(scrobbleCount);
+      totwEntryPartial.setScrobbleCount(scrobbleCount);
 
     } catch (Exception e) {
       log.error("Error during last.fm API call. Likely caused by an unknown username: " + lastFmName);
     }
-    return lpEntityWithLastFmData;
   }
 
   private JsonObject executeRequest(String url, String rootElement) throws IOException {

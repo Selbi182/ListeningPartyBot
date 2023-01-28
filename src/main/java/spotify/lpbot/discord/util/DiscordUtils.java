@@ -1,4 +1,4 @@
-package spotify.lpbot.discord;
+package spotify.lpbot.discord.util;
 
 import java.awt.Color;
 
@@ -12,6 +12,7 @@ public class DiscordUtils {
   /**
    * Print the given message to the given channel in bold
    */
+  @Deprecated
   public static void sendMessage(TextChannel channel, String text) {
     sendMessage(channel, text, true);
   }
@@ -19,6 +20,7 @@ public class DiscordUtils {
   /**
    * Print the given message to the given channel, with an optional flag to make it bold or not
    */
+  @Deprecated
   public static void sendMessage(TextChannel channel, String text, boolean bold) {
     String content = bold ? "**" + text + "**" : text;
     channel.sendMessage(content);
@@ -72,5 +74,13 @@ public class DiscordUtils {
    */
   public static EmbedBuilder createErrorEmbed(String content) {
     return createSimpleEmbed("**ERROR:** " + content, Color.RED, false);
+  }
+
+  /**
+   * Create and send a simple embed to the given channel
+   */
+  public static void sendSimpleEmbed(TextChannel textChannel, String content) {
+    EmbedBuilder simpleEmbed = createSimpleEmbed(content);
+    textChannel.sendMessage(simpleEmbed);
   }
 }

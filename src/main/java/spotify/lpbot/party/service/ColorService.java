@@ -1,9 +1,11 @@
-package spotify.lpbot.misc.color;
+package spotify.lpbot.party.service;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,8 +14,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import spotify.lpbot.party.data.ColorFetchResult;
+
 @Component
-public class ColorProvider {
+public class ColorService {
 
   @Value("${colorfetch.url}")
   private String colorFetchUrl;
@@ -21,12 +25,12 @@ public class ColorProvider {
   private final ObjectMapper objectMapper;
   private final Map<String, Color> cache;
 
-  ColorProvider() {
+  ColorService() {
     this.objectMapper = new ObjectMapper();
     this.cache = new ConcurrentHashMap<>();
   }
 
-  public Color getDominantColorFromImageUrl(String artworkUrl) {
+  public Color getDominantColorFromImage(String artworkUrl) {
     if (cache.containsKey(artworkUrl)) {
       return cache.get(artworkUrl);
     } else {
@@ -36,6 +40,12 @@ public class ColorProvider {
       cache.put(artworkUrl, asAwtColor);
       return asAwtColor;
     }
+  }
+
+  public List<Color> getDominantColorsForMultipleImages(List<String> artworkUrls) {
+    return artworkUrls.stream()
+        .map(this::getDominantColorFromImage)
+        .collect(Collectors.toList());
   }
 
   private ColorFetchResult getFromWebService(String artworkUrl) {
