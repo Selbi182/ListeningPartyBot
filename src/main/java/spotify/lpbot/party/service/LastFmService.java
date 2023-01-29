@@ -63,6 +63,9 @@ public class LastFmService {
     totwEntryPartial.setSongLinkUrl(songUrl);
     int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
     totwEntryPartial.setScrobbleCount(scrobbleCount);
+
+    int globalScrobbleCount = jsonTrack.get("playcount").getAsInt();
+    totwEntryPartial.setGlobalScrobbleCount(globalScrobbleCount);
   }
 
   private JsonObject executeRequest(String url, String rootElement) throws IOException {

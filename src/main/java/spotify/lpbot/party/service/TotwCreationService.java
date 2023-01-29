@@ -32,12 +32,10 @@ public class TotwCreationService {
 
   private final PlaylistService playlistService;
   private final ColorService colorService;
-  private final LastFmService lastFmService;
 
-  TotwCreationService(PlaylistService playlistService, ColorService colorService, LastFmService lastFmService) {
+  TotwCreationService(PlaylistService playlistService, ColorService colorService) {
     this.playlistService = playlistService;
     this.colorService = colorService;
-    this.lastFmService = lastFmService;
   }
 
   public TotwData parseAttachmentFile(Attachment attachment) throws IOException {
@@ -51,7 +49,7 @@ public class TotwCreationService {
     String headline = json.get("title").getAsString();
     JsonArray jsonSubmissions = json.get("submissions").getAsJsonArray();
 
-    List<TotwData.Entry> fullSubmissions = new ArrayList<>();
+    List<TotwData.Entry> partialSubmissions = new ArrayList<>();
     for (JsonElement element : jsonSubmissions) {
       JsonObject entry = element.getAsJsonObject();
       String name = entry.get("name").getAsString();
@@ -59,11 +57,10 @@ public class TotwCreationService {
       String link = entry.get("link").getAsString();
       String writeUp = entry.get("writeUp").getAsString().replaceAll("\\n", "\n");
       TotwData.Entry totwEntry = new TotwData.Entry(name, lastFmName, link, writeUp);
-      lastFmService.attachLastFmData(totwEntry);
-      fullSubmissions.add(totwEntry);
+      partialSubmissions.add(totwEntry);
     }
 
-    return new TotwData(headline, fullSubmissions);
+    return new TotwData(headline, partialSubmissions);
   }
 
   public TotwTrackListWrapper findOrCreateTotwPlaylist(TotwData totwData) {

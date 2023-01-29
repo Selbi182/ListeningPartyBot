@@ -41,6 +41,7 @@ public class TotwData {
     private String userPageUrl;
     private String profilePictureUrl;
     private Integer scrobbleCount;
+    private Integer globalScrobbleCount;
 
     public Entry(String name, String lastFmName, String spotifyLink, String writeUp) {
       this.name = name;
@@ -83,6 +84,10 @@ public class TotwData {
       this.scrobbleCount = scrobbleCount;
     }
 
+    public void setGlobalScrobbleCount(Integer globalScrobbleCount) {
+      this.globalScrobbleCount = globalScrobbleCount;
+    }
+
     public String getSongLinkUrl() {
       return songLinkUrl;
     }
@@ -97,6 +102,10 @@ public class TotwData {
 
     public Integer getScrobbleCount() {
       return scrobbleCount;
+    }
+
+    public Integer getGlobalScrobbleCount() {
+      return globalScrobbleCount;
     }
 
     public String getSongId() {

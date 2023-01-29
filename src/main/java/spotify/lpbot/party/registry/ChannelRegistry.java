@@ -1,11 +1,9 @@
 package spotify.lpbot.party.registry;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import org.javacord.api.entity.Attachment;
 import org.javacord.api.entity.channel.TextChannel;
@@ -18,6 +16,7 @@ import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
 import spotify.lpbot.party.lp.AbstractListeningParty;
 import spotify.lpbot.party.lp.StandardListeningParty;
 import spotify.lpbot.party.lp.TotwListeningParty;
+import spotify.lpbot.party.service.LastFmService;
 import spotify.lpbot.party.service.TotwCreationService;
 import spotify.lpbot.party.service.TrackListCreationService;
 
@@ -25,12 +24,14 @@ import spotify.lpbot.party.service.TrackListCreationService;
 public class ChannelRegistry {
   private final TrackListCreationService trackListCreationService;
   private final TotwCreationService totwPlaylistService;
+  private final LastFmService lastFmService;
 
   private final Map<Long, AbstractListeningParty> lpInstancesForChannelId;
 
-  ChannelRegistry(TrackListCreationService trackListCreationService, TotwCreationService totwPlaylistService) {
+  ChannelRegistry(TrackListCreationService trackListCreationService, TotwCreationService totwPlaylistService, LastFmService lastFmService) {
     this.trackListCreationService = trackListCreationService;
     this.totwPlaylistService = totwPlaylistService;
+    this.lastFmService = lastFmService;
     this.lpInstancesForChannelId = new ConcurrentHashMap<>();
   }
 
@@ -66,10 +67,11 @@ public class ChannelRegistry {
       try {
         TotwData parsedTotwData = totwPlaylistService.parseAttachmentFile(totwData);
         TotwTrackListWrapper totwTrackListWrapper = totwPlaylistService.findOrCreateTotwPlaylist(parsedTotwData);
-        TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper);
+        TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService);
         lpInstancesForChannelId.put(channel.getId(), totwParty);
         String participants = String.join(", ", parsedTotwData.getParticipants());
-        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session\n\n**Participants:**\n" + participants);
+        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session"
+            + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
       } catch (IOException e) {
         e.printStackTrace();
         DiscordUtils.updateWithErrorEmbed(responder, "Couldn't parse TOTW data or failed to create/refresh TOTW playlist. Likely caused by an unknown last.fm username or malformed JSON");

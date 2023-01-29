@@ -45,6 +45,7 @@ public class ColorService {
       String requestUri = UriComponentsBuilder.fromUriString(colorFetchUrl)
           .queryParam("url", artworkUrl)
           .queryParam("strategy", "android_palette")
+          .queryParam("normalize", "false")
           .build().toUriString();
       String rawJson = Jsoup.connect(requestUri).ignoreContentType(true).execute().body();
       return objectMapper.readValue(rawJson, ColorFetchResult.class);
