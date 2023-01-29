@@ -52,10 +52,10 @@ public class TotwCreationService {
     List<TotwData.Entry> partialSubmissions = new ArrayList<>();
     for (JsonElement element : jsonSubmissions) {
       JsonObject entry = element.getAsJsonObject();
-      String name = entry.get("name").getAsString();
-      String lastFmName = entry.get("lastFmName").getAsString();
-      String link = entry.get("link").getAsString();
-      String writeUp = entry.get("writeUp").getAsString().replaceAll("\\n", "\n");
+      String name = entry.get("name").getAsString().trim();
+      String lastFmName = entry.get("lastFmName").getAsString().trim();
+      String link = entry.get("link").getAsString().trim();
+      String writeUp = entry.get("writeUp").getAsString().replaceAll("\\n", "\n").trim();
       TotwData.Entry totwEntry = new TotwData.Entry(name, lastFmName, link, writeUp);
       partialSubmissions.add(totwEntry);
     }

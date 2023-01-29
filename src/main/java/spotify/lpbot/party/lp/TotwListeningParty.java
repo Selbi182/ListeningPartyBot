@@ -40,9 +40,8 @@ public class TotwListeningParty extends AbstractListeningParty{
     // Upgrade last.fm data if possible
     try {
       lastFmService.attachLastFmData(currentTotwEntry);
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
       e.printStackTrace();
-      DiscordUtils.createErrorEmbed("Failed to attach data from last.fm for this TOTW entry");
     }
 
     // (n/m) Subbed by: [entered name]

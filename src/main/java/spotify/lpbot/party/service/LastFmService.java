@@ -50,13 +50,13 @@ public class LastFmService {
 
     // User info
     String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lastFmName);
-    executeRequest(lastFmApiUrlForUserInfo, "user")
-      .ifPresent(jsonUser -> {
-        String userPageUrl = jsonUser.get("url").getAsString();
-        totwEntryPartial.setUserPageUrl(userPageUrl);
-        String userImageUrl = jsonUser.get("image").getAsJsonArray().get(0).getAsJsonObject().get("#text").getAsString();
-        totwEntryPartial.setProfilePictureUrl(userImageUrl);
-      });
+    JsonObject jsonUser = executeRequest(lastFmApiUrlForUserInfo, "user");
+    if (jsonUser != null) {
+      String userPageUrl = jsonUser.get("url").getAsString();
+      totwEntryPartial.setUserPageUrl(userPageUrl);
+      String userImageUrl = jsonUser.get("image").getAsJsonArray().get(0).getAsJsonObject().get("#text").getAsString();
+      totwEntryPartial.setProfilePictureUrl(userImageUrl);
+    }
 
     // Track info
     Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntryPartial.getSongId()));
@@ -64,42 +64,42 @@ public class LastFmService {
     String trackName = spotifyTrack.getName();
     String url = assembleLastFmApiUrlForTrackGetInfo(lastFmName, artistName, trackName);
 
-    executeRequest(url, "track")
-      .ifPresent(jsonTrack -> {
-        String songUrl = jsonTrack.get("url").getAsString();
-        totwEntryPartial.setSongLinkUrl(songUrl);
-        int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
-        totwEntryPartial.setScrobbleCount(scrobbleCount);
+    JsonObject jsonTrack = executeRequest(url, "track");
+    if (jsonTrack != null) {
+      String songUrl = jsonTrack.get("url").getAsString();
+      totwEntryPartial.setSongLinkUrl(songUrl);
+      int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
+      totwEntryPartial.setScrobbleCount(scrobbleCount);
 
-        int globalScrobbleCount = jsonTrack.get("playcount").getAsInt();
-        totwEntryPartial.setGlobalScrobbleCount(globalScrobbleCount);
-      });
+      int globalScrobbleCount = jsonTrack.get("playcount").getAsInt();
+      totwEntryPartial.setGlobalScrobbleCount(globalScrobbleCount);
+    }
   }
 
-  private Optional<JsonObject> executeRequest(String url, String rootElement) {
+  private JsonObject executeRequest(String url, String rootElement) {
     try {
       String rawJson = Jsoup.connect(url).ignoreContentType(true).execute().body();
       JsonObject json = JsonParser.parseString(rawJson).getAsJsonObject();
-      return Optional.of(json.get(rootElement).getAsJsonObject());
+      return json.get(rootElement).getAsJsonObject();
     } catch (Exception e) {
       e.printStackTrace();
-      return Optional.empty();
+      return null;
     }
   }
 
   private String assembleLastFmApiUrlForUserInfo(String lfmUserName) {
     return lastFmApiUrl.cloneBuilder()
         .queryParam("method", "user.getInfo")
-        .queryParam("username", escape(lfmUserName))
+        .queryParam("username", lfmUserName)
         .build().toUriString();
   }
 
   private String assembleLastFmApiUrlForTrackGetInfo(String lfmUserName, String artistName, String trackName) {
     return lastFmApiUrl.cloneBuilder()
         .queryParam("method", "track.getInfo")
+        .queryParam("username", lfmUserName)
         .queryParam("artist", escape(artistName))
         .queryParam("track", escape(trackName))
-        .queryParam("username", escape(lfmUserName))
         .build().toUriString();
   }
 
