@@ -70,7 +70,7 @@ public class TotwListeningParty extends AbstractListeningParty{
       embed.setUrl(songLfmLink);
     }
 
-    // Write-up (with fancy quotation marks and in cursive)
+    // Description (song length + Write-up with fancy quotation marks and in cursive)
     String songLength = BotUtils.formatTime(track.getDurationMs());
     String description = "**Song Length:** " + songLength;
 
@@ -78,18 +78,18 @@ public class TotwListeningParty extends AbstractListeningParty{
       String writeUp = Arrays.stream(currentTotwEntry.getWriteUp().split("\n"))
         .map(String::trim)
         .collect(Collectors.joining("\n> "));
-      embed.setDescription(description + "\n\n" + String.format("**Write-up:**\n> *%s*", writeUp));
+      description += "\n\n" + String.format("**Write-up:**\n> *%s*", writeUp);
     }
+    embed.setDescription(description);
 
     // Scrobble info
     Integer scrobbleCount = currentTotwEntry.getScrobbleCount();
-    if (scrobbleCount != null && scrobbleCount > 0) {
-      embed.addField(subbedBy + "\u2019s Scrobbles:", formatNumberWithCommas(scrobbleCount), true);
-    }
-
     Integer globalScrobbleCount = currentTotwEntry.getGlobalScrobbleCount();
-    if (globalScrobbleCount != null && globalScrobbleCount > 0) {
-      embed.addField("Global Scrobbles:", formatNumberWithCommas(globalScrobbleCount), true);
+    if (currentTotwEntry.getScrobbleCount() != null && currentTotwEntry.getGlobalScrobbleCount() != null) {
+        embed.addField(subbedBy + "\u2019s Scrobbles:", formatNumberWithCommas(scrobbleCount), true);
+        embed.addField("Global Scrobbles:", formatNumberWithCommas(globalScrobbleCount), true);
+    } else {
+      embed.addField("Error:", "Scrobble count couldn't be found for this track");
     }
 
     // Full-res cover art
