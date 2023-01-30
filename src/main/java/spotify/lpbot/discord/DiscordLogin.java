@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.io.Files;
 
-import spotify.api.events.LoggedInEvent;
+import spotify.api.events.SpotifyApiLoggedInEvent;
 
 @Component
 public class DiscordLogin {
@@ -30,7 +30,7 @@ public class DiscordLogin {
     this.discordMessageHandler = discordMessageHandler;
   }
 
-  @EventListener(LoggedInEvent.class)
+  @EventListener(SpotifyApiLoggedInEvent.class)
   public void start() {
     LOGGER.info("Successfully logged into Spotify!");
     try {
