@@ -1,7 +1,9 @@
 package spotify.lpbot.discord.util;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
@@ -64,17 +66,24 @@ public class DiscordUtils {
   // Update Embed
 
   /**
-   * Respond the given InteractionOriginalResponseUpdater with a simple embed
+   * Respond to the given InteractionOriginalResponseUpdater with a simple embed
    */
   public static void updateWithSimpleEmbed(InteractionOriginalResponseUpdater responder, String content) {
     respondWithEmbed(responder, createSimpleEmbed(content));
   }
 
   /**
-   * Respond the given InteractionOriginalResponseUpdater with an error embed
+   * Respond to the given InteractionOriginalResponseUpdater with an error embed
    */
   public static void updateWithErrorEmbed(InteractionOriginalResponseUpdater responder, String content) {
     respondWithEmbed(responder, createErrorEmbed(content));
+  }
+
+  /**
+   * Respond to the given InteractionOriginalResponseUpdater with an embed that also has content
+   */
+  public static void updateWithContentEmbed(InteractionOriginalResponseUpdater responder, String embedContent, String mainContent) {
+    responder.setContent(mainContent).addEmbed(createSimpleEmbed(embedContent)).update();
   }
 
   ////////////////
@@ -96,4 +105,19 @@ public class DiscordUtils {
     return responder.addEmbed(embed).update();
   }
 
+  ////////////////
+  // Misc
+
+  /**
+   * Format the given headline and content in a pretty way for the description part of embeds
+   * @param headline the headline
+   * @param content the main content
+   * @return the formatted string
+   */
+  public static String formatDescription(String headline, String content) {
+    String descriptionBody = Arrays.stream(content.split("\n"))
+        .map(String::trim)
+        .collect(Collectors.joining("\n> "));
+    return String.format("**%s:**\n> *%s*", headline, descriptionBody);
+  }
 }

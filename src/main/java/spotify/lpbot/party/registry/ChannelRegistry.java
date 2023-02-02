@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.TotwData;
 import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
+import spotify.lpbot.party.data.tracklist.TrackListWrapper;
 import spotify.lpbot.party.lp.AbstractListeningParty;
 import spotify.lpbot.party.lp.StandardListeningParty;
 import spotify.lpbot.party.lp.TotwListeningParty;
@@ -50,13 +51,14 @@ public class ChannelRegistry {
 
   public void register(TextChannel channel, InteractionOriginalResponseUpdater responder, String potentialUrl) {
     if (!isRegistered(channel) || lpInstancesForChannelId.get(channel.getId()).isOverwritable()) {
-      trackListCreationService.verifyUriAndCreateTarget(potentialUrl) // todo limit at 200 tracks or 10h
-        .ifPresentOrElse(trackListWrapper -> {
-          StandardListeningParty simpleListeningParty = new StandardListeningParty(channel, trackListWrapper);
-          lpInstancesForChannelId.put(channel.getId(), simpleListeningParty);
-          DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session");
-        },
-        () -> DiscordUtils.updateWithErrorEmbed(responder, "The provided URL is invalid (no Spotify album/playlist detected or malformed formatting)"));
+      try {
+        TrackListWrapper trackListWrapper = trackListCreationService.verifyUriAndCreateTarget(potentialUrl);
+        StandardListeningParty simpleListeningParty = new StandardListeningParty(channel, trackListWrapper, lastFmService);
+        lpInstancesForChannelId.put(channel.getId(), simpleListeningParty);
+        DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session.\n\n**Link:** " + trackListWrapper.getLink());
+      } catch (RuntimeException e) {
+        DiscordUtils.updateWithErrorEmbed(responder, e.getMessage());
+      }
     } else {
       DiscordUtils.updateWithErrorEmbed(responder, "A Listening Party is currently in progress for this channel. `/stop` it first!");
     }

@@ -290,6 +290,10 @@ public abstract class AbstractListeningParty {
     return trackListWrapper;
   }
 
+  public TextChannel getChannel() {
+    return channel;
+  }
+
   ////////////////////
   // Abstract Discord logic
 

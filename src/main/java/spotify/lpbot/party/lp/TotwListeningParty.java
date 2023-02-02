@@ -3,9 +3,7 @@ package spotify.lpbot.party.lp;
 import java.awt.Color;
 import java.io.IOException;
 import java.text.NumberFormat;
-import java.util.Arrays;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -72,12 +70,8 @@ public class TotwListeningParty extends AbstractListeningParty{
     // Description (song length + Write-up with fancy quotation marks and in cursive)
     String songLength = BotUtils.formatTime(track.getDurationMs());
     String description = "**Song Length:** " + songLength;
-
     if (!currentTotwEntry.getWriteUp().isBlank()) {
-      String writeUp = Arrays.stream(currentTotwEntry.getWriteUp().split("\n"))
-        .map(String::trim)
-        .collect(Collectors.joining("\n> "));
-      description += "\n\n" + String.format("**Write-up:**\n> *%s*", writeUp);
+      description += "\n\n" + DiscordUtils.formatDescription("Write-up", currentTotwEntry.getWriteUp());
     }
     embed.setDescription(description);
 
@@ -101,7 +95,8 @@ public class TotwListeningParty extends AbstractListeningParty{
     String albumArtists = BotUtils.joinArtists(track.getAlbum().getArtists());
     String albumName = track.getAlbum().getName();
     String albumReleaseYear = BotUtils.findReleaseYear(track);
-    embed.setFooter(String.format("Album: %s \u2013 %s (%s)", albumArtists, albumName, albumReleaseYear));
+    String releaseType = track.getAlbum().getAlbumType().toString();
+    embed.setFooter(String.format("%s: %s \u2013 %s (%s)", releaseType, albumArtists, albumName, albumReleaseYear));
 
     // Send off the embed to the Discord channel
     return embed;

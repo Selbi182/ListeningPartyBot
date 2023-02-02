@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import org.jsoup.Jsoup;
 import org.springframework.stereotype.Component;
@@ -12,6 +11,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
 import com.google.common.io.Files;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -45,7 +45,7 @@ public class LastFmService {
     }
   }
 
-  public void attachLastFmData(TotwData.Entry totwEntryPartial) throws IOException {
+  public void attachLastFmData(TotwData.Entry totwEntryPartial) {
     String lastFmName = totwEntryPartial.getLastFmName();
 
     // User info
@@ -62,7 +62,7 @@ public class LastFmService {
     Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntryPartial.getSongId()));
     String artistName = BotUtils.getFirstArtistName(spotifyTrack);
     String trackName = spotifyTrack.getName();
-    String url = assembleLastFmApiUrlForTrackGetInfo(lastFmName, artistName, trackName);
+    String url = assembleLastFmApiUrlForTrackGetInfoForUser(lastFmName, artistName, trackName);
 
     JsonObject jsonTrack = executeRequest(url, "track");
     if (jsonTrack != null) {
@@ -76,15 +76,24 @@ public class LastFmService {
     }
   }
 
+  public JsonElement getWikiEntryOfSong(Track track) {
+    String artistName = BotUtils.getFirstArtistName(track);
+    String trackName = track.getName();
+    String url = assembleLastFmApiUrlForTrackGetInfo(artistName, trackName);
+    return executeRequest(url, "track");
+  }
+
   private JsonObject executeRequest(String url, String rootElement) {
     try {
       String rawJson = Jsoup.connect(url).ignoreContentType(true).execute().body();
       JsonObject json = JsonParser.parseString(rawJson).getAsJsonObject();
-      return json.get(rootElement).getAsJsonObject();
+      if (!json.has("error")) {
+        return json.get(rootElement).getAsJsonObject();
+      }
     } catch (Exception e) {
       e.printStackTrace();
-      return null;
     }
+    return null;
   }
 
   private String assembleLastFmApiUrlForUserInfo(String lfmUserName) {
@@ -94,7 +103,15 @@ public class LastFmService {
         .build().toUriString();
   }
 
-  private String assembleLastFmApiUrlForTrackGetInfo(String lfmUserName, String artistName, String trackName) {
+  private String assembleLastFmApiUrlForTrackGetInfo(String artistName, String trackName) {
+    return lastFmApiUrl.cloneBuilder()
+        .queryParam("method", "track.getInfo")
+        .queryParam("artist", escape(artistName))
+        .queryParam("track", escape(trackName))
+        .build().toUriString();
+  }
+
+  private String assembleLastFmApiUrlForTrackGetInfoForUser(String lfmUserName, String artistName, String trackName) {
     return lastFmApiUrl.cloneBuilder()
         .queryParam("method", "track.getInfo")
         .queryParam("username", lfmUserName)
