@@ -38,7 +38,7 @@ public class TotwListeningParty extends AbstractListeningParty{
     // Upgrade last.fm data if possible
     try {
       lastFmService.attachLastFmData(currentTotwEntry);
-    } catch (IOException | RuntimeException e) {
+    } catch (RuntimeException e) {
       e.printStackTrace();
     }
 
