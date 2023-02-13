@@ -11,13 +11,14 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
 
+import de.selbi.colorfetch.data.ColorFetchResult;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Album;
 import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Playlist;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
-import spotify.api.BotException;
+import spotify.api.SpotifyApiException;
 import spotify.api.SpotifyCall;
 import spotify.lpbot.party.data.tracklist.AlbumTrackListWrapper;
 import spotify.lpbot.party.data.tracklist.PlaylistTrackListWrapper;
@@ -64,9 +65,9 @@ public class TrackListCreationService {
         allAlbumTracks.addAll(Arrays.asList(execute));
       }
       String smallestImage = BotUtils.findSmallestImage(album.getImages());
-      Color albumColor = colorService.getDominantColorFromImage(smallestImage);
-      return new AlbumTrackListWrapper(album, allAlbumTracks, albumColor);
-    } catch (BotException e) {
+      ColorFetchResult albumColor = colorService.getDominantColorFromImageUrl(smallestImage);
+      return new AlbumTrackListWrapper(album, allAlbumTracks, albumColor.getPrimary());
+    } catch (SpotifyApiException e) {
       throw new IllegalArgumentException("The provided URL is invalid (no Spotify album detected or malformed formatting)");
     }
   }
@@ -79,14 +80,15 @@ public class TrackListCreationService {
           .stream()
           .map(p -> (Track) p.getTrack())
           .collect(Collectors.toList());
-      List<Color> colors = allPlaylistTracks.stream()
+      List<ColorFetchResult.RGB> colors = allPlaylistTracks.stream()
           .map(Track::getAlbum)
           .map(AlbumSimplified::getImages)
           .map(BotUtils::findSmallestImage)
-          .map(colorService::getDominantColorFromImage)
+          .map(colorService::getDominantColorFromImageUrl)
+          .map(ColorFetchResult::getPrimary)
           .collect(Collectors.toList());
       return new PlaylistTrackListWrapper(playlist, allPlaylistTracks, colors);
-    } catch (BotException e) {
+    } catch (SpotifyApiException e) {
       throw new IllegalArgumentException("The provided URL is invalid (no Spotify playlist detected or malformed formatting)");
     }
 

@@ -1,8 +1,8 @@
 package spotify.lpbot.party.data.tracklist;
 
-import java.awt.Color;
 import java.util.List;
 
+import de.selbi.colorfetch.data.ColorFetchResult;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
 public interface TrackListWrapper {
@@ -11,5 +11,5 @@ public interface TrackListWrapper {
 
   List<Track> getTracks();
 
-  Color getColorByTrackIndex(int index);
+  ColorFetchResult.RGB getColorByTrackIndex(int index);
 }

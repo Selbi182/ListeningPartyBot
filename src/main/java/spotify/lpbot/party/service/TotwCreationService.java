@@ -1,6 +1,5 @@
 package spotify.lpbot.party.service;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -17,6 +16,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import de.selbi.colorfetch.data.ColorFetchResult;
 import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Playlist;
 import se.michaelthelin.spotify.model_objects.specification.PlaylistSimplified;
@@ -89,11 +89,12 @@ public class TotwCreationService {
     List<Track> allPlaylistTracks = playlistService.getAllPlaylistTracks(playlist);
 
     // Find the colors for each track
-    List<Color> colors = allPlaylistTracks.stream()
+    List<ColorFetchResult.RGB> colors = allPlaylistTracks.stream()
         .map(Track::getAlbum)
         .map(AlbumSimplified::getImages)
         .map(BotUtils::findSmallestImage)
-        .map(colorService::getDominantColorFromImage)
+        .map(colorService::getDominantColorFromImageUrl)
+        .map(ColorFetchResult::getPrimary)
         .collect(Collectors.toList());
 
     return new TotwTrackListWrapper(playlist, allPlaylistTracks, colors, totwData);

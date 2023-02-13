@@ -15,6 +15,7 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
+import de.selbi.colorfetch.data.ColorFetchResult;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
@@ -283,7 +284,8 @@ public abstract class AbstractListeningParty {
   }
 
   protected Color getColorForCurrentTrack() {
-    return getTrackListWrapper().getColorByTrackIndex(getCurrentTrackListIndex());
+    ColorFetchResult.RGB rgb = getTrackListWrapper().getColorByTrackIndex(getCurrentTrackListIndex());
+    return new Color(rgb.getR(), rgb.getG(), rgb.getB());
   }
 
   protected TrackListWrapper getTrackListWrapper() {

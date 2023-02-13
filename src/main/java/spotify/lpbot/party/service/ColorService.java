@@ -1,57 +1,42 @@
 package spotify.lpbot.party.service;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
-import org.jsoup.Jsoup;
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import spotify.lpbot.party.data.ColorFetchResult;
+import de.selbi.colorfetch.data.ColorFetchResult;
+import spotify.lpbot.party.data.color.ColorProvider;
+import spotify.lpbot.party.data.color.ExternalColorProvider;
+import spotify.lpbot.party.data.color.InternalColorProvider;
 
 @Component
 public class ColorService {
+  @Value("${colorfetch.url:#{null}}")
+  private String colorFetchServiceUrl;
 
-  @Value("${colorfetch.url}")
-  private String colorFetchUrl;
+  private ColorProvider colorProvider;
 
-  private final ObjectMapper objectMapper;
-  private final Map<String, Color> cache;
+  private final Logger logger = Logger.getLogger(ColorService.class.getName());
 
-  ColorService() {
-    this.objectMapper = new ObjectMapper();
-    this.cache = new ConcurrentHashMap<>();
-  }
-
-  public Color getDominantColorFromImage(String artworkUrl) {
-    if (cache.containsKey(artworkUrl)) {
-      return cache.get(artworkUrl);
+  @PostConstruct
+  void printColorLibraryState() {
+    if (useExternalWebservice()) {
+      logger.info("Using external color fetch service: " + colorFetchServiceUrl);
+      this.colorProvider = new ExternalColorProvider(colorFetchServiceUrl);
     } else {
-      ColorFetchResult fromWebService = getFromWebService(artworkUrl);
-      ColorFetchResult.RGB primary = fromWebService.getPrimary();
-      Color asAwtColor = new Color(primary.getR(), primary.getG(), primary.getB());
-      cache.put(artworkUrl, asAwtColor);
-      return asAwtColor;
+      logger.info("'colorfetch.url' not set in application.properties - using internal color fetch service");
+      this.colorProvider = new InternalColorProvider();
     }
   }
 
-  private ColorFetchResult getFromWebService(String artworkUrl) {
-    try {
-      String requestUri = UriComponentsBuilder.fromUriString(colorFetchUrl)
-          .queryParam("url", artworkUrl)
-          .queryParam("strategy", "android_palette")
-          .queryParam("normalize", "0.5")
-          .build().toUriString();
-      String rawJson = Jsoup.connect(requestUri).ignoreContentType(true).execute().body();
-      return objectMapper.readValue(rawJson, ColorFetchResult.class);
-    } catch (IOException e) {
-      e.printStackTrace();
-      return ColorFetchResult.FALLBACK;
-    }
+  public ColorFetchResult getDominantColorFromImageUrl(String artworkUrl) {
+    return colorProvider.getDominantColorFromImageUrl(artworkUrl);
+  }
+
+  private boolean useExternalWebservice() {
+    return colorFetchServiceUrl != null;
   }
 }
