@@ -17,7 +17,7 @@ public class InternalColorProvider implements ColorProvider {
 
   @Override
   public ColorFetchResult getDominantColorFromImageUrl(String artworkUrl) {
-    ColorCacheKey colorCacheKey = ColorCacheKey.of(artworkUrl, ColorCacheKey.Strategy.COLOR_THIEF, NORMALIZE);
+    ColorCacheKey colorCacheKey = ColorCacheKey.of(artworkUrl, ColorCacheKey.Strategy.ANDROID_PALETTE, Float.parseFloat(NORMALIZE));
     try {
       return colorResultCache.getColor(colorCacheKey);
     } catch (ExecutionException e) {

@@ -7,10 +7,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.selbi.colorfetch.cache.ColorCacheKey;
 import de.selbi.colorfetch.data.ColorFetchResult;
 
 public class ExternalColorProvider implements ColorProvider {
-  private final static String STRATEGY = "color_thief";
 
   private final String colorFetchServiceUrl;
   private final ObjectMapper objectMapper;
@@ -25,8 +25,8 @@ public class ExternalColorProvider implements ColorProvider {
     try {
       String requestUri = UriComponentsBuilder.fromUriString(colorFetchServiceUrl)
           .queryParam("url", artworkUrl)
-          .queryParam("strategy", STRATEGY)
-          .queryParam("normalize", String.valueOf(NORMALIZE))
+          .queryParam("strategy", ColorCacheKey.Strategy.ANDROID_PALETTE.name().toLowerCase())
+          .queryParam("normalize", NORMALIZE)
           .build().toUriString();
       String rawJson = Jsoup.connect(requestUri).ignoreContentType(true).execute().body();
       return objectMapper.readValue(rawJson, ColorFetchResult.class);

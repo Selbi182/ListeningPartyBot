@@ -43,7 +43,7 @@ repositories {
 
 dependencies {
     implementation 'spotify:spotify-dependencies:1.5.0'
-    implementation 'de.selbi:color-fetch:1.1.0'
+    implementation 'de.selbi:color-fetch:1.2.2'
 
     implementation 'se.michaelthelin.spotify:spotify-web-api-java:8.0.0'
 
