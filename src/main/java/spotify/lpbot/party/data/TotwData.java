@@ -1,7 +1,5 @@
 package spotify.lpbot.party.data;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -107,17 +105,5 @@ public class TotwData {
     public Integer getGlobalScrobbleCount() {
       return globalScrobbleCount;
     }
-
-    public String getSongId() {
-      try {
-        URL url = new URL(getSpotifyLink());
-        String path = url.getPath();
-        return path.substring(path.lastIndexOf('/') + 1);
-      } catch (MalformedURLException e) {
-        e.printStackTrace();
-        return "";
-      }
-    }
   }
-
 }

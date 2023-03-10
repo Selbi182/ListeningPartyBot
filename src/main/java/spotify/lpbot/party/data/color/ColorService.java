@@ -1,18 +1,15 @@
-package spotify.lpbot.party.service;
+package spotify.lpbot.party.data.color;
 
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import de.selbi.colorfetch.data.ColorFetchResult;
-import spotify.lpbot.party.data.color.ColorProvider;
-import spotify.lpbot.party.data.color.ExternalColorProvider;
-import spotify.lpbot.party.data.color.InternalColorProvider;
 
-@Component
+@Service
 public class ColorService {
   @Value("${colorfetch.url:#{null}}")
   private String colorFetchServiceUrl;

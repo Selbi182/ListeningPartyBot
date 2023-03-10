@@ -1,6 +1,6 @@
 package spotify.lpbot.party.service;
 
-import java.awt.Color;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,10 +20,11 @@ import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
 import spotify.api.SpotifyApiException;
 import spotify.api.SpotifyCall;
+import spotify.lpbot.party.data.color.ColorService;
 import spotify.lpbot.party.data.tracklist.AlbumTrackListWrapper;
 import spotify.lpbot.party.data.tracklist.PlaylistTrackListWrapper;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
-import spotify.util.BotUtils;
+import spotify.util.SpotifyUtils;
 
 @Component
 public class TrackListCreationService {
@@ -37,18 +38,25 @@ public class TrackListCreationService {
     this.colorService = colorService;
   }
 
-  public TrackListWrapper verifyUriAndCreateTarget(String input) {
-    URI uri = URI.create(input);
-    String path = uri.getPath();
-    String[] splitPath = path.split("/");
-    if (splitPath.length >= 2) {
-      String id = splitPath[2];
-      switch (splitPath[1]) {
-        case "album":
-          return createAlbumTracklist(id);
-        case "playlist":
-          return createPlaylistTracklist(id);
+  public TrackListWrapper verifyUriAndCreateTarget(String potentialUrl) {
+    try {
+      if (SpotifyUtils.isShortSpotifyUrl(potentialUrl)) {
+        potentialUrl = SpotifyUtils.getFullUrlFromShortSpotifyUrl(potentialUrl);
+      }
+      URI uri = URI.create(potentialUrl);
+      String path = uri.getPath();
+      String[] splitPath = path.split("/");
+      if (splitPath.length >= 2) {
+        String id = splitPath[2];
+        switch (splitPath[1]) {
+          case "album":
+            return createAlbumTracklist(id);
+          case "playlist":
+            return createPlaylistTracklist(id);
         }
+      }
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Failed to parse shortened URL", e);
     }
     throw new IllegalArgumentException("Release type is not supported (only albums and playlists are)");
   }
@@ -64,7 +72,7 @@ public class TrackListCreationService {
         Track[] execute = SpotifyCall.execute(spotifyApi.getSeveralTracks(ids));
         allAlbumTracks.addAll(Arrays.asList(execute));
       }
-      String smallestImage = BotUtils.findSmallestImage(album.getImages());
+      String smallestImage = SpotifyUtils.findSmallestImage(album.getImages());
       ColorFetchResult albumColor = colorService.getDominantColorFromImageUrl(smallestImage);
       return new AlbumTrackListWrapper(album, allAlbumTracks, albumColor.getPrimary());
     } catch (SpotifyApiException e) {
@@ -83,7 +91,7 @@ public class TrackListCreationService {
       List<ColorFetchResult.RGB> colors = allPlaylistTracks.stream()
           .map(Track::getAlbum)
           .map(AlbumSimplified::getImages)
-          .map(BotUtils::findSmallestImage)
+          .map(SpotifyUtils::findSmallestImage)
           .map(colorService::getDominantColorFromImageUrl)
           .map(ColorFetchResult::getPrimary)
           .collect(Collectors.toList());

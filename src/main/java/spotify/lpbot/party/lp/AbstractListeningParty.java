@@ -19,7 +19,7 @@ import de.selbi.colorfetch.data.ColorFetchResult;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
-import spotify.util.BotUtils;
+import spotify.util.SpotifyUtils;
 
 public abstract class AbstractListeningParty {
   private static final long COUNTDOWN_INTERVAL_MS = 1000;
@@ -153,9 +153,9 @@ public abstract class AbstractListeningParty {
 
         EmbedBuilder nowPlayingEmbed = new EmbedBuilder();
 
-        nowPlayingEmbed.setTitle(String.format("%s \u2013 %s", BotUtils.getFirstArtistName(currentTrack), currentTrack.getName()));
-        nowPlayingEmbed.setDescription("> From **" + currentTrack.getAlbum().getName() + "** (" + BotUtils.findReleaseYear(currentTrack) + ")");
-        nowPlayingEmbed.setThumbnail(BotUtils.findLargestImage(currentTrack.getAlbum().getImages()));
+        nowPlayingEmbed.setTitle(String.format("%s \u2013 %s", SpotifyUtils.getFirstArtistName(currentTrack), currentTrack.getName()));
+        nowPlayingEmbed.setDescription("> From **" + currentTrack.getAlbum().getName() + "** (" + SpotifyUtils.findReleaseYear(currentTrack) + ")");
+        nowPlayingEmbed.setThumbnail(SpotifyUtils.findLargestImage(currentTrack.getAlbum().getImages()));
         nowPlayingEmbed.setColor(getColorForCurrentTrack());
 
         nowPlayingEmbed.addField("Listening Party Link:", getTrackListWrapper().getLink());
@@ -173,13 +173,7 @@ public abstract class AbstractListeningParty {
         } else {
           passedTime = songLength - nextFuture.getDelay(TimeUnit.MILLISECONDS);
         }
-        nowPlayingEmbed.addField("Timestamp:", BotUtils.formatTime(passedTime) + " / " + BotUtils.formatTime(songLength) + (paused ? " *(Paused)*" : ""), true);
-
-//        if (!paused) {
-//          // todo periodic updating of the timestamp (for a while, not sure how long yet)
-//          nowPlayingEmbed.setFooter("(Timestamp will stop updating in 60 seconds!)");
-//        }
-
+        nowPlayingEmbed.addField("Timestamp:", SpotifyUtils.formatTime(passedTime) + " / " + SpotifyUtils.formatTime(songLength) + (paused ? " *(Paused)*" : ""), true);
         DiscordUtils.respondWithEmbed(responder, nowPlayingEmbed);
       } else {
         printFinalMessage();

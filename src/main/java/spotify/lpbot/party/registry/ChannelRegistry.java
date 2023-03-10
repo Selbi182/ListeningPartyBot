@@ -72,7 +72,8 @@ public class ChannelRegistry {
         TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService);
         lpInstancesForChannelId.put(channel.getId(), totwParty);
         String participants = String.join(", ", parsedTotwData.getParticipants());
-        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session"
+        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session."
+            + "\n\n**Link:** " + totwTrackListWrapper.getLink()
             + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
       } catch (IOException e) {
         e.printStackTrace();

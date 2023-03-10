@@ -1,7 +1,6 @@
 package spotify.lpbot.party.lp;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -13,7 +12,7 @@ import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.TotwData;
 import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
 import spotify.lpbot.party.service.LastFmService;
-import spotify.util.BotUtils;
+import spotify.util.SpotifyUtils;
 
 public class TotwListeningParty extends AbstractListeningParty{
   private final TotwTrackListWrapper totwTrackListWrapper;
@@ -58,7 +57,7 @@ public class TotwListeningParty extends AbstractListeningParty{
 
     // [Artist] - [Title] ([song:length])
     // -> Link to last.fm page
-    String songArtists = BotUtils.joinArtists(track.getArtists());
+    String songArtists = SpotifyUtils.joinArtists(track.getArtists());
     String songTitle = track.getName();
     embed.setTitle(String.format("%s \u2013 %s", songArtists, songTitle));
 
@@ -68,7 +67,7 @@ public class TotwListeningParty extends AbstractListeningParty{
     }
 
     // Description (song length + Write-up with fancy quotation marks and in cursive)
-    String songLength = BotUtils.formatTime(track.getDurationMs());
+    String songLength = SpotifyUtils.formatTime(track.getDurationMs());
     String description = "**Song Length:** " + songLength;
     if (!currentTotwEntry.getWriteUp().isBlank()) {
       description += "\n\n" + DiscordUtils.formatDescription("Write-up", currentTotwEntry.getWriteUp());
@@ -86,15 +85,15 @@ public class TotwListeningParty extends AbstractListeningParty{
     }
 
     // Full-res cover art
-    String imageUrl = BotUtils.findLargestImage(track.getAlbum().getImages());
+    String imageUrl = SpotifyUtils.findLargestImage(track.getAlbum().getImages());
     Color embedColor = getColorForCurrentTrack();
     embed.setImage(imageUrl);
     embed.setColor(embedColor);
 
     // Album: [Artist] - [Album] ([Release year])
-    String albumArtists = BotUtils.joinArtists(track.getAlbum().getArtists());
+    String albumArtists = SpotifyUtils.joinArtists(track.getAlbum().getArtists());
     String albumName = track.getAlbum().getName();
-    String albumReleaseYear = BotUtils.findReleaseYear(track);
+    String albumReleaseYear = SpotifyUtils.findReleaseYear(track);
     String releaseType = track.getAlbum().getAlbumType().toString();
     embed.setFooter(String.format("%s: %s \u2013 %s (%s)", releaseType, albumArtists, albumName, albumReleaseYear));
 

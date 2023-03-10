@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -22,9 +23,10 @@ import se.michaelthelin.spotify.model_objects.specification.Playlist;
 import se.michaelthelin.spotify.model_objects.specification.PlaylistSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.party.data.TotwData;
+import spotify.lpbot.party.data.color.ColorService;
 import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
 import spotify.services.PlaylistService;
-import spotify.util.BotUtils;
+import spotify.util.SpotifyUtils;
 
 @Service
 public class TotwCreationService {
@@ -81,7 +83,19 @@ public class TotwCreationService {
 
     // Fill playlist with songs
     List<String> songIds = totwData.getTotwEntries().stream()
-        .map(TotwData.Entry::getSongId)
+        .map(TotwData.Entry::getSpotifyLink)
+        .map(link -> {
+          try {
+            if (SpotifyUtils.isShortSpotifyUrl(link)) {
+              link = SpotifyUtils.getFullUrlFromShortSpotifyUrl(link);
+            }
+            return SpotifyUtils.getIdFromSpotifyUrl(link);
+          } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+          }
+        })
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
     playlistService.addSongsToPlaylistById(playlist, songIds);
 
@@ -92,7 +106,7 @@ public class TotwCreationService {
     List<ColorFetchResult.RGB> colors = allPlaylistTracks.stream()
         .map(Track::getAlbum)
         .map(AlbumSimplified::getImages)
-        .map(BotUtils::findSmallestImage)
+        .map(SpotifyUtils::findSmallestImage)
         .map(colorService::getDominantColorFromImageUrl)
         .map(ColorFetchResult::getPrimary)
         .collect(Collectors.toList());

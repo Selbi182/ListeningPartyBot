@@ -10,12 +10,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.selbi.colorfetch.cache.ColorCacheKey;
 import de.selbi.colorfetch.data.ColorFetchResult;
 
+
 public class ExternalColorProvider implements ColorProvider {
+  private final static String STRATEGY = ColorCacheKey.Strategy.ANDROID_PALETTE.name().toLowerCase();
 
   private final String colorFetchServiceUrl;
   private final ObjectMapper objectMapper;
 
-  public ExternalColorProvider(String colorFetchServiceUrl) {
+  ExternalColorProvider(String colorFetchServiceUrl) {
     this.colorFetchServiceUrl = colorFetchServiceUrl;
     this.objectMapper = new ObjectMapper();
   }
@@ -25,8 +27,8 @@ public class ExternalColorProvider implements ColorProvider {
     try {
       String requestUri = UriComponentsBuilder.fromUriString(colorFetchServiceUrl)
           .queryParam("url", artworkUrl)
-          .queryParam("strategy", ColorCacheKey.Strategy.ANDROID_PALETTE.name().toLowerCase())
-          .queryParam("normalize", NORMALIZE)
+          .queryParam("strategy", STRATEGY)
+          .queryParam("normalize", String.valueOf(NORMALIZE))
           .build().toUriString();
       String rawJson = Jsoup.connect(requestUri).ignoreContentType(true).execute().body();
       return objectMapper.readValue(rawJson, ColorFetchResult.class);

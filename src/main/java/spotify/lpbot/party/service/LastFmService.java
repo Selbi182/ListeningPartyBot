@@ -2,6 +2,7 @@ package spotify.lpbot.party.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -19,15 +20,15 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.api.SpotifyCall;
 import spotify.lpbot.party.data.TotwData;
-import spotify.util.BotLogger;
-import spotify.util.BotUtils;
+import spotify.util.SpotifyLogger;
+import spotify.util.SpotifyUtils;
 
 @Component
 public class LastFmService {
   private final SpotifyApi spotifyApi;
   private UriComponentsBuilder lastFmApiUrl;
 
-  LastFmService(SpotifyApi spotifyApi, BotLogger botLogger) {
+  LastFmService(SpotifyApi spotifyApi, SpotifyLogger spotifyLogger) {
     this.spotifyApi = spotifyApi;
 
     try {
@@ -39,7 +40,7 @@ public class LastFmService {
         .queryParam("api_key", lastFmApiToken)
         .queryParam("format", "json");
     } catch (IOException e) {
-      botLogger.error("Failed to start bot! (Couldn't read last.fm token). Terminating...");
+      spotifyLogger.error("Failed to start bot! (Couldn't read last.fm token). Terminating...");
       e.printStackTrace();
       System.exit(1);
     }
@@ -59,25 +60,31 @@ public class LastFmService {
     }
 
     // Track info
-    Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(totwEntryPartial.getSongId()));
-    String artistName = BotUtils.getFirstArtistName(spotifyTrack);
-    String trackName = spotifyTrack.getName();
-    String url = assembleLastFmApiUrlForTrackGetInfoForUser(lastFmName, artistName, trackName);
+    try {
+      String idFromSpotifyUrl = SpotifyUtils.getIdFromSpotifyUrl(totwEntryPartial.getSpotifyLink());
 
-    JsonObject jsonTrack = executeRequest(url, "track");
-    if (jsonTrack != null) {
-      String songUrl = jsonTrack.get("url").getAsString();
-      totwEntryPartial.setSongLinkUrl(songUrl);
-      int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
-      totwEntryPartial.setScrobbleCount(scrobbleCount);
+      Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(idFromSpotifyUrl));
+      String artistName = SpotifyUtils.getFirstArtistName(spotifyTrack);
+      String trackName = spotifyTrack.getName();
+      String url = assembleLastFmApiUrlForTrackGetInfoForUser(lastFmName, artistName, trackName);
 
-      int globalScrobbleCount = jsonTrack.get("playcount").getAsInt();
-      totwEntryPartial.setGlobalScrobbleCount(globalScrobbleCount);
+      JsonObject jsonTrack = executeRequest(url, "track");
+      if (jsonTrack != null) {
+        String songUrl = jsonTrack.get("url").getAsString();
+        totwEntryPartial.setSongLinkUrl(songUrl);
+        int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
+        totwEntryPartial.setScrobbleCount(scrobbleCount);
+
+        int globalScrobbleCount = jsonTrack.get("playcount").getAsInt();
+        totwEntryPartial.setGlobalScrobbleCount(globalScrobbleCount);
+      }
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
     }
   }
 
   public JsonElement getWikiEntryOfSong(Track track) {
-    String artistName = BotUtils.getFirstArtistName(track);
+    String artistName = SpotifyUtils.getFirstArtistName(track);
     String trackName = track.getName();
     String url = assembleLastFmApiUrlForTrackGetInfo(artistName, trackName);
     return executeRequest(url, "track");
