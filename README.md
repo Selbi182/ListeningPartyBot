@@ -3,7 +3,8 @@
 
 A Discord bot used to setup, organize, and host listening parties for Spotify playlists or albums! 
 
-Use the following URL to invite the bot to your server: https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=8590027776&scope=bot
+Use the following URL to invite the bot to your server:<br />
+https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=8590027776&scope=bot
 
 ## Basic Usage
 Once the bot is invited to your server, you can manage listening parties on a per-channel basis. Here is how you do that:
