@@ -62,3 +62,8 @@ Print this information as chat message
 
 ### `/totw <attachment>`
 [Experimental] Host a Track-of-the-Week party (attachment: the TOTW info data). This feature is highly experimental and therefore shouldn't be used unless you know what you're doing!
+
+## Support
+If you got any problems, [write an issue ticket on GitHub](https://github.com/Selbi182/ListeningPartyBot/issues) and I will gladly take a look at it :)
+
+Alternatively, message me on Discord: **Selbi#7270**
