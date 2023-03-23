@@ -1,7 +1,8 @@
 # Listening Party Bot
+![Blahaj](https://i.imgur.com/NuEmaM9.png)
+
 A Discord bot used to setup, organize, and host listening parties for Spotify playlists or albums! 
 
-## Invite Bot
 Use the following URL to invite the bot to your server:
 
 https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=8590027776&scope=bot
@@ -23,7 +24,7 @@ Once the bot is invited to your server, you can manage listening parties on a pe
 ![grafik](https://user-images.githubusercontent.com/8850085/227275051-059da934-8b85-47ee-9230-a43d0c1d7f6d.png)
 
 
-And that's it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. Where possible, it will also display some additional information of the current song from last.fm's wiki:
+And that's it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. When possible, it will also display some additional information of the current song from last.fm's wiki:
 
 ![grafik](https://user-images.githubusercontent.com/8850085/227275284-484c228c-859f-455b-9349-e1a1a4fb98ac.png)
 
