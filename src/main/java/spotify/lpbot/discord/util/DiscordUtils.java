@@ -56,6 +56,13 @@ public class DiscordUtils {
   // Send Embed
 
   /**
+   * Create and send a simple message to the given channel
+   */
+  public static void sendSimpleMessage(TextChannel textChannel, String content) {
+    textChannel.sendMessage(content);
+  }
+
+  /**
    * Create and send a simple embed to the given channel
    */
   public static void sendSimpleEmbed(TextChannel textChannel, String content) {

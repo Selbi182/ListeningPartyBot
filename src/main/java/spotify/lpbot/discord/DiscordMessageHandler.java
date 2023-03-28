@@ -17,7 +17,7 @@ import spotify.lpbot.party.registry.ChannelRegistry;
 @Component
 public class DiscordMessageHandler {
   private static final long DEFAULT_COUNTDOWN_SECONDS = 5L;
-  private static final long MAX_COUNTDOWNS_SECONDS = 30L;
+  private static final long MAX_COUNTDOWNS_SECONDS = 120L;
   private static final long DEFAULT_SKIP_AMOUNT = 1L;
 
   private final ChannelRegistry lpChannelRegistry;
@@ -48,7 +48,7 @@ public class DiscordMessageHandler {
                     .ifPresentOrElse(countdown -> lpChannelRegistry
                             .getExistingLPInstance(channel, responder)
                             .ifPresent(lp -> lp.start(responder, countdown)),
-                        () -> DiscordUtils.updateWithErrorEmbed(responder, "Custom countdown must be between 0-30 seconds"));
+                        () -> DiscordUtils.updateWithErrorEmbed(responder, "Custom countdown must be between 0-" + MAX_COUNTDOWNS_SECONDS + " seconds"));
                 break;
               case "stop":
                 lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.stop(responder));
@@ -76,6 +76,7 @@ public class DiscordMessageHandler {
                 lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.restart(responder));
                 break;
               case "nowplaying":
+              case "np":
                 lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.nowPlaying(responder));
                 break;
               case "link":

@@ -21,6 +21,7 @@ public class DiscordSlashCommands {
     LPBotCommand.of("restart", "Restart the currently playing song"),
     LPBotCommand.of("pause", "Pause the current Listening Party (resume by typing `/start` again)"),
     LPBotCommand.of("nowplaying", "Print info of the current Listening Party for this channel"),
+    LPBotCommand.of("np", "Print info of the current Listening Party for this channel (alias of /nowplaying)"),
     LPBotCommand.of("link", "Print the set target link"),
     LPBotCommand.of("help", "Print the commands as chat message"),
     LPBotCommand.of("totw", "[Experimental] Host a Track-of-the-Week party", SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the TOTW info data", true))

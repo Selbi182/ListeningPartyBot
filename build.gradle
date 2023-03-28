@@ -42,17 +42,17 @@ repositories {
 }
 
 dependencies {
-    implementation 'spotify:spotify-dependencies:1.8.1'
+    implementation 'spotify:spotify-dependencies:1.8.6'
     implementation 'de.selbi:color-fetch:1.2.3'
 
     implementation 'se.michaelthelin.spotify:spotify-web-api-java:8.0.0'
 
-    implementation 'org.javacord:javacord:3.7.0'
+    implementation 'org.javacord:javacord:3.8.0'
 
     implementation 'com.google.guava:guava:31.1-jre'
-    implementation 'org.jsoup:jsoup:1.15.3'
+    implementation 'org.jsoup:jsoup:1.15.4'
 
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.4.5'
+    implementation "org.springframework.boot:spring-boot-starter-web:$springVersion"
 }
 
 

@@ -55,7 +55,8 @@ public class ChannelRegistry {
         TrackListWrapper trackListWrapper = trackListCreationService.verifyUriAndCreateTarget(potentialUrl);
         StandardListeningParty simpleListeningParty = new StandardListeningParty(channel, trackListWrapper, lastFmService);
         lpInstancesForChannelId.put(channel.getId(), simpleListeningParty);
-        DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session.\n\n**Link:** " + trackListWrapper.getLink());
+        DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session.");
+        DiscordUtils.sendSimpleMessage(channel, "**Link:** " + trackListWrapper.getLink());
       } catch (RuntimeException e) {
         DiscordUtils.updateWithErrorEmbed(responder, e.getMessage());
       }
@@ -73,8 +74,8 @@ public class ChannelRegistry {
         lpInstancesForChannelId.put(channel.getId(), totwParty);
         String participants = String.join(", ", parsedTotwData.getParticipants());
         DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session."
-            + "\n\n**Link:** " + totwTrackListWrapper.getLink()
             + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
+        DiscordUtils.sendSimpleMessage(channel, "**Link:** " + totwTrackListWrapper.getLink());
       } catch (IOException e) {
         e.printStackTrace();
         DiscordUtils.updateWithErrorEmbed(responder, "Couldn't parse TOTW data or failed to create/refresh TOTW playlist. Likely caused by an unknown last.fm username or malformed JSON");
