@@ -3,11 +3,13 @@
 
 A Discord bot used to set up, organize, and host listening parties for Spotify playlists or albums! 
 
-Use the following URL to invite the bot to your server:<br />
-https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=8590027776&scope=bot
+**Use the following URL to invite the bot to your server:**\
+https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=18432&scope=bot
+
+(Make sure the permissions for sending messages and embedding links are checked, otherwise the bot won't work.)
 
 ## Basic Usage
-Once the bot is invited to your server, you can manage listening parties on a per-channel basis. Here is how you do that:
+Once the bot is invited to your server, make sure it has writing permissions. Once that's done, you can manage listening parties on a per-channel basis (threads aren't supported yet). Here is how you do that:
 
 1. Type `/set` and pass a URL to a Spotify album or playlist (you can get the link by right-clicking on the playlist or album and selecting _Share → Copy Album/Playlist Link_):
 ![/set](https://i.imgur.com/fHAfr7J.png)
@@ -22,13 +24,13 @@ Once the bot is invited to your server, you can manage listening parties on a pe
 
 And that's it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. When possible, it will also display some additional information of the current song from [last.fm's wiki](https://www.last.fm/music/Rammstein/_/Ohne+dich/+wiki):
 
-![last.fm wiki](https://user-images.githubusercontent.com/8850085/227275284-484c228c-859f-455b-9349-e1a1a4fb98ac.png)
+![last.fm wiki](https://i.imgur.com/fRhOnyk.png)
 
 ## Commands
 Here's a full list of every command and what it does:
 
 ### `/nowplaying` or `/np`
-Print info of the currently ongoing Listening Party for this channel. Useful for late joiners, because it also displays the timestamp:
+Print info of the currently ongoing Listening Party for this channel. Useful for late joiners, because it also displays the timestamp of the current song:
 
 ![/nowplaying](https://i.imgur.com/MCN5pZf.png)
 
@@ -51,7 +53,7 @@ Play the previous song in the Listening Party (amount: how many songs to go back
 Restart the currently playing song
 
 ### `/pause`
-Pause the current Listening Party (resume by typing /start again)
+Pause the current Listening Party (resume by typing `/start` again)
 
 ### `/link`
 Print the set target link
