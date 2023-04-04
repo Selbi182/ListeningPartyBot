@@ -9,8 +9,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Lists;
-
 import de.selbi.colorfetch.data.ColorFetchResult;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Album;
@@ -67,7 +65,7 @@ public class TrackListCreationService {
       verifyBelowTrackCountLimit(album.getTracks().getTotal());
       List<TrackSimplified> albumTracks = SpotifyCall.executePaging(spotifyApi.getAlbumsTracks(album.getId()));
       List<Track> allAlbumTracks = new ArrayList<>();
-      for (List<TrackSimplified> sublistTracks : Lists.partition(albumTracks, 50)) {
+      for (List<TrackSimplified> sublistTracks : SpotifyUtils.partitionList(albumTracks, 50)) {
         String[] ids = sublistTracks.stream().map(TrackSimplified::getId).toArray(String[]::new);
         Track[] execute = SpotifyCall.execute(spotifyApi.getSeveralTracks(ids));
         allAlbumTracks.addAll(Arrays.asList(execute));

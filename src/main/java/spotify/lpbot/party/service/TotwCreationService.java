@@ -100,7 +100,7 @@ public class TotwCreationService {
     playlistService.addSongsToPlaylistById(playlist, songIds);
 
     // Get the tracks as complete Track objects
-    List<Track> allPlaylistTracks = playlistService.getAllPlaylistTracks(playlist);
+    List<Track> allPlaylistTracks = playlistService.getAllPlaylistSongs(playlist);
 
     // Find the colors for each track
     List<ColorFetchResult.RGB> colors = allPlaylistTracks.stream()

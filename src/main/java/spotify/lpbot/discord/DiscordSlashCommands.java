@@ -1,5 +1,6 @@
 package spotify.lpbot.discord;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -8,8 +9,6 @@ import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandBuilder;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
-
-import com.google.common.collect.ImmutableSet;
 
 public class DiscordSlashCommands {
   private final static List<LPBotCommand> DISCORD_SLASH_COMMANDS = List.of(
@@ -32,13 +31,13 @@ public class DiscordSlashCommands {
   }
 
   public static Set<SlashCommandBuilder> getSlashCommands () {
-    ImmutableSet.Builder<SlashCommandBuilder> builder = ImmutableSet.builder();
+    Set<SlashCommandBuilder> builder = new HashSet<>();
     for (LPBotCommand command : DISCORD_SLASH_COMMANDS) {
       builder.add(command.getSubCommand()
         .map(subCommand -> SlashCommand.with(command.getCommand(), command.getDescription(), List.of(subCommand)))
         .orElse(SlashCommand.with(command.getCommand(), command.getDescription())));
     }
-    return builder.build();
+    return Set.copyOf(builder);
   }
 
   static class LPBotCommand {

@@ -58,7 +58,7 @@ public class StandardListeningParty extends AbstractListeningParty {
     }
 
     // Description
-    JsonElement jsonTrack = lastFmService.getWikiEntryOfSong(track);
+    JsonElement jsonTrack = lastFmService.getLastFmTrackInfo(track);
     if (jsonTrack != null && jsonTrack.getAsJsonObject().has("wiki")) {
       JsonObject jsonTrackObject = jsonTrack.getAsJsonObject();
       JsonObject wiki = jsonTrackObject.get("wiki").getAsJsonObject();

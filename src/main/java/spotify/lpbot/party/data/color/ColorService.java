@@ -1,39 +1,48 @@
 package spotify.lpbot.party.data.color;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
+import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.selbi.colorfetch.cache.ColorCacheKey;
 import de.selbi.colorfetch.data.ColorFetchResult;
 
 @Service
 public class ColorService {
-  @Value("${colorfetch.url:#{null}}")
-  private String colorFetchServiceUrl;
+  private static final String STRATEGY = ColorCacheKey.Strategy.ANDROID_PALETTE.name().toLowerCase();
+  private static final float NORMALIZE = 0.65f;
 
-  private ColorProvider colorProvider;
-
+  private final ObjectMapper objectMapper = new ObjectMapper();
   private final Logger logger = Logger.getLogger(ColorService.class.getName());
+
+  @Value("${color_fetch.url}")
+  private String colorFetchUrl;
 
   @PostConstruct
   void printColorLibraryState() {
-    if (useExternalWebservice()) {
-      logger.info("Using external color fetch service: " + colorFetchServiceUrl);
-      this.colorProvider = new ExternalColorProvider(colorFetchServiceUrl);
-    } else {
-      logger.info("'colorfetch.url' not set in application.properties - using internal color fetch service");
-      this.colorProvider = new InternalColorProvider();
-    }
+    logger.info("Using external color fetch service: " + colorFetchUrl);
   }
 
   public ColorFetchResult getDominantColorFromImageUrl(String artworkUrl) {
-    return colorProvider.getDominantColorFromImageUrl(artworkUrl);
-  }
-
-  private boolean useExternalWebservice() {
-    return colorFetchServiceUrl != null;
+    try {
+      String requestUri = UriComponentsBuilder.fromUriString(colorFetchUrl)
+        .queryParam("url", artworkUrl)
+        .queryParam("strategy", STRATEGY)
+        .queryParam("normalize", String.valueOf(NORMALIZE))
+        .build().toUriString();
+      String rawJson = Jsoup.connect(requestUri).ignoreContentType(true).execute().body();
+      return objectMapper.readValue(rawJson, ColorFetchResult.class);
+    } catch (IOException e) {
+      e.printStackTrace();
+      return ColorFetchResult.FALLBACK;
+    }
   }
 }

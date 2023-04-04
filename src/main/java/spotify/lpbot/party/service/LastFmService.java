@@ -1,17 +1,16 @@
 package spotify.lpbot.party.service;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import javax.annotation.PostConstruct;
+
 import org.jsoup.Jsoup;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
-import com.google.common.io.Files;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -20,30 +19,29 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.api.SpotifyCall;
 import spotify.lpbot.party.data.TotwData;
-import spotify.util.SpotifyLogger;
 import spotify.util.SpotifyUtils;
 
 @Component
 public class LastFmService {
   private final SpotifyApi spotifyApi;
+
+  @Value("${last_fm.api_token}")
+  private String lastFmApiToken;
+
   private UriComponentsBuilder lastFmApiUrl;
 
-  LastFmService(SpotifyApi spotifyApi, SpotifyLogger spotifyLogger) {
+  LastFmService(SpotifyApi spotifyApi) {
     this.spotifyApi = spotifyApi;
+  }
 
-    try {
-      String lastFmApiToken = readToken();
-      this.lastFmApiUrl = UriComponentsBuilder.newInstance()
-        .scheme("http")
-        .host("ws.audioscrobbler.com")
-        .path("/2.0")
-        .queryParam("api_key", lastFmApiToken)
-        .queryParam("format", "json");
-    } catch (IOException e) {
-      spotifyLogger.error("Failed to start bot! (Couldn't read last.fm token). Terminating...");
-      e.printStackTrace();
-      System.exit(1);
-    }
+  @PostConstruct
+  void createLastFmApiUrlBase() {
+    this.lastFmApiUrl = UriComponentsBuilder.newInstance()
+      .scheme("http")
+      .host("ws.audioscrobbler.com")
+      .path("/2.0")
+      .queryParam("api_key", lastFmApiToken)
+      .queryParam("format", "json");
   }
 
   public void attachLastFmData(TotwData.Entry totwEntryPartial) {
@@ -83,7 +81,7 @@ public class LastFmService {
     }
   }
 
-  public JsonElement getWikiEntryOfSong(Track track) {
+  public JsonElement getLastFmTrackInfo(Track track) {
     String artistName = SpotifyUtils.getFirstArtistName(track);
     String trackName = track.getName();
     String url = assembleLastFmApiUrlForTrackGetInfo(artistName, trackName);
@@ -105,37 +103,29 @@ public class LastFmService {
 
   private String assembleLastFmApiUrlForUserInfo(String lfmUserName) {
     return lastFmApiUrl.cloneBuilder()
-        .queryParam("method", "user.getInfo")
-        .queryParam("username", lfmUserName)
-        .build().toUriString();
+      .queryParam("method", "user.getInfo")
+      .queryParam("username", lfmUserName)
+      .build().toUriString();
   }
 
   private String assembleLastFmApiUrlForTrackGetInfo(String artistName, String trackName) {
     return lastFmApiUrl.cloneBuilder()
-        .queryParam("method", "track.getInfo")
-        .queryParam("artist", escape(artistName))
-        .queryParam("track", escape(trackName))
-        .build().toUriString();
+      .queryParam("method", "track.getInfo")
+      .queryParam("artist", escape(artistName))
+      .queryParam("track", escape(trackName))
+      .build().toUriString();
   }
 
   private String assembleLastFmApiUrlForTrackGetInfoForUser(String lfmUserName, String artistName, String trackName) {
     return lastFmApiUrl.cloneBuilder()
-        .queryParam("method", "track.getInfo")
-        .queryParam("username", lfmUserName)
-        .queryParam("artist", escape(artistName))
-        .queryParam("track", escape(trackName))
-        .build().toUriString();
+      .queryParam("method", "track.getInfo")
+      .queryParam("username", lfmUserName)
+      .queryParam("artist", escape(artistName))
+      .queryParam("track", escape(trackName))
+      .build().toUriString();
   }
 
   private String escape(String lfmUserName) {
     return UriUtils.encode(lfmUserName, StandardCharsets.UTF_8);
-  }
-
-  private String readToken() throws IOException {
-    File tokenFile = new File("./lastfmtoken.txt");
-    if (tokenFile.canRead()) {
-      return Files.asCharSource(tokenFile, Charset.defaultCharset()).readFirstLine();
-    }
-    throw new IOException("Can't read token file!");
   }
 }

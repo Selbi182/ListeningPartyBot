@@ -41,7 +41,9 @@ templates/READY
 /spring.log
 spotifybot.properties
 log.txt
-discordtoken.txt
+config/discord_token.txt
 totwdata.txt
-lastfmtoken.txt
+config/lastfm_token.txt
 deploy.sh
+config/
+application.properties
