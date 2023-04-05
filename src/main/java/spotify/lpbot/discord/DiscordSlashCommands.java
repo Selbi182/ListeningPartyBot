@@ -14,15 +14,18 @@ public class DiscordSlashCommands {
   private final static List<LPBotCommand> DISCORD_SLASH_COMMANDS = List.of(
     LPBotCommand.of("set", "Set the target link", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
     LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down, default: 5", false)),
+    LPBotCommand.of("quickstart", "A combination of `/set` and `/start` to instantly start a Listening Party without countdown", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
     LPBotCommand.of("stop", "Cancel a current Listening Party and reset it to the beginning"),
-    LPBotCommand.of("next", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to next, default: 1", false)),
+    LPBotCommand.of("next", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
+    LPBotCommand.of("skip", "Skip the current song in the Listening Party (alias for `/next`)", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
     LPBotCommand.of("previous", "Play the previous song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to go back, default: 1", false)),
     LPBotCommand.of("restart", "Restart the currently playing song"),
     LPBotCommand.of("pause", "Pause the current Listening Party (resume by typing `/start` again)"),
     LPBotCommand.of("nowplaying", "Print info of the current Listening Party for this channel"),
-    LPBotCommand.of("np", "Print info of the current Listening Party for this channel (alias of /nowplaying)"),
+    LPBotCommand.of("np", "Print info of the current Listening Party for this channel (alias for `/nowplaying`)"),
     LPBotCommand.of("link", "Print the set target link"),
-    LPBotCommand.of("help", "Print the commands as chat message"),
+    LPBotCommand.of("help", "Print a basic tutorial of how the bot works"),
+    LPBotCommand.of("commands", "Print all commands as a chat message"),
     LPBotCommand.of("totw", "[Experimental] Host a Track-of-the-Week party", SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the TOTW info data", true))
   );
 
@@ -30,7 +33,7 @@ public class DiscordSlashCommands {
     return DISCORD_SLASH_COMMANDS;
   }
 
-  public static Set<SlashCommandBuilder> getSlashCommands () {
+  public static Set<SlashCommandBuilder> getSlashCommands() {
     Set<SlashCommandBuilder> builder = new HashSet<>();
     for (LPBotCommand command : DISCORD_SLASH_COMMANDS) {
       builder.add(command.getSubCommand()
@@ -49,6 +52,7 @@ public class DiscordSlashCommands {
       this.command = command;
       this.description = description;
     }
+
     LPBotCommand(String command, String description, SlashCommandOption subCommand) {
       this(command, description);
       this.subCommand = subCommand;

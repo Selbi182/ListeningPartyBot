@@ -56,7 +56,7 @@ public abstract class AbstractListeningParty {
 
   public void start(InteractionOriginalResponseUpdater responder, int countdown) {
     if (isState(State.READY)) {
-      EmbedBuilder countdownEmbed = DiscordUtils.createSimpleEmbed("The Listening Party begins in...", true);
+      EmbedBuilder countdownEmbed = DiscordUtils.createSimpleEmbed(String.format("The Listening Party begins%s...", countdown > 0 ? " in" : ""), true);
       remainingTimeAtTimeOfPause = null;
       state = State.COUNTDOWN;
       createAndStartCountdown(responder, countdownEmbed, countdown, false);
@@ -217,7 +217,7 @@ public abstract class AbstractListeningParty {
   private void printFinalMessage() {
     currentTrackListIndex = 0;
     this.state = State.READY;
-    DiscordUtils.sendSimpleEmbed(channel, "\uD83C\uDF89 This Listening Party is over. Thank you for joining! \uD83C\uDF8A");
+    DiscordUtils.sendSimpleEmbed(channel, FinalMessages.getRandomFinalMessage());
   }
 
   private void createAndStartCountdown(InteractionOriginalResponseUpdater responder, EmbedBuilder countdownEmbed, int countdown, boolean resume) {

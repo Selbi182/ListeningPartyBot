@@ -11,18 +11,16 @@ https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=1
 ## Basic Usage
 Once the bot is invited to your server, make sure it has writing permissions. Once that's done, you can manage listening parties on a per-channel basis (threads aren't supported yet). Here is how you do that:
 
-1. Type `/set` and pass a URL to a Spotify album or playlist (you can get the link by right-clicking on the playlist or album and selecting _Share → Copy Album/Playlist Link_):
+1. Type `/set` and pass a URL to a Spotify album or playlist (you can get the link by right-clicking on the playlist or album and selecting _Share → Copy Album/Playlist Link_): \
 ![/set](https://i.imgur.com/fHAfr7J.png)
 
-
-2. The bot will then verify and preprocess the given playlist or album. If everything looks good, a message will pop up, saying that everything is ready, along with a link to the target, so that everyone can get ready:
+2. The bot will then verify and preprocess the given target. If everything looks good, a message with the link will pop up, so that everyone can get ready: \
 ![/set](https://i.imgur.com/mCwxRZ2.png)
-
 
 3. Type `/start` to start the actual listening party. A custom countdown (in seconds) can be passed to this command. By default, it's 5 seconds. \
 ![/start](https://i.imgur.com/qic5gG2.png)
 
-And that's it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. When possible, it will also display some additional information of the current song from [last.fm's wiki](https://www.last.fm/music/Rammstein/_/Ohne+dich/+wiki):
+And that's all there is to it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. When possible, it will also display some additional information of the current song from [last.fm's wiki](https://www.last.fm/music/Rammstein/_/Ohne+dich/+wiki):
 
 ![last.fm wiki](https://i.imgur.com/fRhOnyk.png)
 
@@ -35,19 +33,22 @@ Print info of the currently ongoing Listening Party for this channel. Useful for
 ![/nowplaying](https://i.imgur.com/MCN5pZf.png)
 
 ### `/set <url>`
-Set the target link (url: the URL to the Spotify playlist or album)
+Set the target link (_url_: the URL to the Spotify playlist or album)
 
 ### `/start <countdown>`
-Start or resume the Listening Party (countdown: the seconds to count down, default: 5)
+Start or resume the Listening Party (_countdown_: the seconds to count down, default: 5)
+
+### `/quickstart <url>`
+A combination of `/set` and `/start` to instantly start a Listening Party without countdown (_url_: the URL to the Spotify playlist or album)
 
 ### `/stop`
 Cancel a current Listening Party and reset it to the beginning
 
-### `/next <amount>`
-Skip the current song in the Listening Party (amount: how many songs to skip, default: 1)
+### `/next <amount>` or `/skip <amount>`
+Skip the current song in the Listening Party (_amount_: how many songs to skip, default: 1)
 
 ### `/previous <amount>`
-Play the previous song in the Listening Party (amount: how many songs to go back to, default: 1)
+Play the previous song in the Listening Party (_amount_: how many songs to go back to, default: 1)
 
 ### `/restart`
 Restart the currently playing song
@@ -59,10 +60,13 @@ Pause the current Listening Party (resume by typing `/start` again)
 Print the set target link
 
 ### `/help`
-Print this information as chat message
+Print a basic tutorial of how the bot works
+
+### `/commands`
+Print all commands as a chat message
 
 ### `/totw <attachment>`
-_[Experimental]_ Host a Track-of-the-Week party (attachment: the TOTW info data). **This feature is highly experimental and therefore shouldn't be used unless you know what you're doing!**
+_[Experimental]_ Host a Track-of-the-Week party (_attachment_: the TOTW info data). **This feature is highly experimental and therefore shouldn't be used unless you know what you're doing!**
 
 ## Support
 If you got any problems, [write an issue ticket on GitHub](https://github.com/Selbi182/ListeningPartyBot/issues) and I will gladly take a look at it :)

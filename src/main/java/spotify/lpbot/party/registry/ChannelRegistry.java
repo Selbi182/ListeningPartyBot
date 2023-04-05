@@ -49,20 +49,24 @@ public class ChannelRegistry {
     }
   }
 
-  public void register(TextChannel channel, InteractionOriginalResponseUpdater responder, String potentialUrl) {
+  public AbstractListeningParty register(TextChannel channel, InteractionOriginalResponseUpdater responder, String potentialUrl, boolean printHint) {
     if (!isRegistered(channel) || lpInstancesForChannelId.get(channel.getId()).isOverwritable()) {
       try {
         TrackListWrapper trackListWrapper = trackListCreationService.verifyUriAndCreateTarget(potentialUrl);
         StandardListeningParty simpleListeningParty = new StandardListeningParty(channel, trackListWrapper, lastFmService);
         lpInstancesForChannelId.put(channel.getId(), simpleListeningParty);
-        DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session.");
-        DiscordUtils.sendSimpleMessage(channel, "**Link:** " + trackListWrapper.getLink());
+        if (printHint) {
+          DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session.");
+          DiscordUtils.sendSimpleMessage(channel, "**Link:** " + trackListWrapper.getLink());
+        }
+        return simpleListeningParty;
       } catch (RuntimeException e) {
         DiscordUtils.updateWithErrorEmbed(responder, e.getMessage());
       }
     } else {
       DiscordUtils.updateWithErrorEmbed(responder, "A Listening Party is currently in progress for this channel. `/stop` it first!");
     }
+    return null;
   }
 
   public void registerTotw(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment totwData) {
@@ -74,7 +78,7 @@ public class ChannelRegistry {
         lpInstancesForChannelId.put(channel.getId(), totwParty);
         String participants = String.join(", ", parsedTotwData.getParticipants());
         DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session."
-            + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
+          + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
         DiscordUtils.sendSimpleMessage(channel, "**Link:** " + totwTrackListWrapper.getLink());
       } catch (IOException e) {
         e.printStackTrace();

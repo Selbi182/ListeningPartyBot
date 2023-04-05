@@ -42,21 +42,27 @@ public class TrackListCreationService {
         potentialUrl = SpotifyUtils.getFullUrlFromShortSpotifyUrl(potentialUrl);
       }
       URI uri = URI.create(potentialUrl);
+      if (!uri.isAbsolute()) {
+        throw new IllegalArgumentException("Invalid URL");
+      }
       String path = uri.getPath();
       String[] splitPath = path.split("/");
       if (splitPath.length >= 2) {
+        String releaseType = splitPath[1].toLowerCase();
         String id = splitPath[2];
-        switch (splitPath[1]) {
+        switch (releaseType) {
           case "album":
             return createAlbumTracklist(id);
           case "playlist":
             return createPlaylistTracklist(id);
+          default:
+            throw new IllegalArgumentException(String.format("Release type `%s` is not supported (must be `album` or `playlist`)", releaseType));
         }
       }
     } catch (IOException e) {
       throw new IllegalArgumentException("Failed to parse shortened URL", e);
     }
-    throw new IllegalArgumentException("Release type is not supported (only albums and playlists are)");
+    throw new IllegalArgumentException("Failed to parse Spotify URL");
   }
 
   private TrackListWrapper createAlbumTracklist(String albumId) {
@@ -74,7 +80,7 @@ public class TrackListCreationService {
       ColorFetchResult albumColor = colorService.getDominantColorFromImageUrl(smallestImage);
       return new AlbumTrackListWrapper(album, allAlbumTracks, albumColor.getPrimary());
     } catch (SpotifyApiException e) {
-      throw new IllegalArgumentException("The provided URL is invalid (no Spotify album detected or malformed formatting)");
+      throw new IllegalArgumentException("Invalid URL (no Spotify release found or malformed formatting)");
     }
   }
 
@@ -83,21 +89,20 @@ public class TrackListCreationService {
       Playlist playlist = SpotifyCall.execute(spotifyApi.getPlaylist(id));
       verifyBelowTrackCountLimit(playlist.getTracks().getTotal());
       List<Track> allPlaylistTracks = SpotifyCall.executePaging(spotifyApi.getPlaylistsItems(playlist.getId()))
-          .stream()
-          .map(p -> (Track) p.getTrack())
-          .collect(Collectors.toList());
+        .stream()
+        .map(p -> (Track) p.getTrack())
+        .collect(Collectors.toList());
       List<ColorFetchResult.RGB> colors = allPlaylistTracks.stream()
-          .map(Track::getAlbum)
-          .map(AlbumSimplified::getImages)
-          .map(SpotifyUtils::findSmallestImage)
-          .map(colorService::getDominantColorFromImageUrl)
-          .map(ColorFetchResult::getPrimary)
-          .collect(Collectors.toList());
+        .map(Track::getAlbum)
+        .map(AlbumSimplified::getImages)
+        .map(SpotifyUtils::findSmallestImage)
+        .map(colorService::getDominantColorFromImageUrl)
+        .map(ColorFetchResult::getPrimary)
+        .collect(Collectors.toList());
       return new PlaylistTrackListWrapper(playlist, allPlaylistTracks, colors);
     } catch (SpotifyApiException e) {
-      throw new IllegalArgumentException("The provided URL is invalid (no Spotify playlist detected or malformed formatting)");
+      throw new IllegalArgumentException("Invalid URL (no Spotify release found or malformed formatting)");
     }
-
   }
 
   private void verifyBelowTrackCountLimit(int trackCount) {
