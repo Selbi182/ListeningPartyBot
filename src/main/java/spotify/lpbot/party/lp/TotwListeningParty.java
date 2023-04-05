@@ -10,6 +10,8 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.TotwData;
+import spotify.lpbot.party.data.lastfm.LastFmTrack;
+import spotify.lpbot.party.data.lastfm.LastFmUser;
 import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
 import spotify.lpbot.party.service.LastFmService;
 import spotify.util.SpotifyUtils;
@@ -36,7 +38,11 @@ public class TotwListeningParty extends AbstractListeningParty{
 
     // Upgrade last.fm data if possible
     try {
-      lastFmService.attachLastFmData(currentTotwEntry);
+      String lastFmName = currentTotwEntry.getLastFmName();
+      LastFmUser lastFmUserInfo = lastFmService.getLastFmUserInfo(lastFmName);
+      LastFmTrack lastFmTrack = lastFmService.getLastFmTrackInfo(track, lastFmName);
+      currentTotwEntry.attachUserInfo(lastFmUserInfo);
+      currentTotwEntry.attachTrackInfo(lastFmTrack);
     } catch (RuntimeException e) {
       e.printStackTrace();
     }
@@ -78,8 +84,8 @@ public class TotwListeningParty extends AbstractListeningParty{
     Integer scrobbleCount = currentTotwEntry.getScrobbleCount();
     Integer globalScrobbleCount = currentTotwEntry.getGlobalScrobbleCount();
     if (currentTotwEntry.getScrobbleCount() != null && currentTotwEntry.getGlobalScrobbleCount() != null) {
-        embed.addField(subbedBy + "\u2019s Scrobbles:", formatNumberWithCommas(scrobbleCount), true);
-        embed.addField("Global Scrobbles:", formatNumberWithCommas(globalScrobbleCount), true);
+      embed.addField(subbedBy + "\u2019s Scrobbles:", formatNumberWithCommas(scrobbleCount), true);
+      embed.addField("Global Scrobbles:", formatNumberWithCommas(globalScrobbleCount), true);
     } else {
       embed.addField("Error:", "Scrobble count couldn't be found for this track");
     }

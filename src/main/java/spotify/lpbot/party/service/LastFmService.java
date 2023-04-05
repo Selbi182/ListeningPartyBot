@@ -1,104 +1,115 @@
 package spotify.lpbot.party.service;
 
-import java.net.MalformedURLException;
-import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 
-import org.jsoup.Jsoup;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriUtils;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.model_objects.specification.Track;
-import spotify.api.SpotifyCall;
-import spotify.lpbot.party.data.TotwData;
+import spotify.lpbot.party.data.lastfm.LastFmTrack;
+import spotify.lpbot.party.data.lastfm.LastFmUser;
 import spotify.util.SpotifyUtils;
 
 @Component
 public class LastFmService {
-  private final SpotifyApi spotifyApi;
-
   @Value("${last_fm.api_token}")
   private String lastFmApiToken;
 
+  private WebClient webClient;
   private UriComponentsBuilder lastFmApiUrl;
 
-  LastFmService(SpotifyApi spotifyApi) {
-    this.spotifyApi = spotifyApi;
-  }
-
   @PostConstruct
-  void createLastFmApiUrlBase() {
+  void createWebClient() {
+    ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
+    this.webClient = WebClient.builder()
+      .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(mapper)))
+      .build();
+
     this.lastFmApiUrl = UriComponentsBuilder.newInstance()
-      .scheme("http")
+      .scheme("https")
       .host("ws.audioscrobbler.com")
       .path("/2.0")
       .queryParam("api_key", lastFmApiToken)
       .queryParam("format", "json");
   }
 
-  public void attachLastFmData(TotwData.Entry totwEntryPartial) {
-    String lastFmName = totwEntryPartial.getLastFmName();
-
-    // User info
-    String lastFmApiUrlForUserInfo = assembleLastFmApiUrlForUserInfo(lastFmName);
-    JsonObject jsonUser = executeRequest(lastFmApiUrlForUserInfo, "user");
-    if (jsonUser != null) {
-      String userPageUrl = jsonUser.get("url").getAsString();
-      totwEntryPartial.setUserPageUrl(userPageUrl);
-      String userImageUrl = jsonUser.get("image").getAsJsonArray().get(0).getAsJsonObject().get("#text").getAsString();
-      totwEntryPartial.setProfilePictureUrl(userImageUrl);
-    }
-
-    // Track info
-    try {
-      String idFromSpotifyUrl = SpotifyUtils.getIdFromSpotifyUrl(totwEntryPartial.getSpotifyLink());
-
-      Track spotifyTrack = SpotifyCall.execute(spotifyApi.getTrack(idFromSpotifyUrl));
-      String artistName = SpotifyUtils.getFirstArtistName(spotifyTrack);
-      String trackName = spotifyTrack.getName();
-      String url = assembleLastFmApiUrlForTrackGetInfoForUser(lastFmName, artistName, trackName);
-
-      JsonObject jsonTrack = executeRequest(url, "track");
-      if (jsonTrack != null) {
-        String songUrl = jsonTrack.get("url").getAsString();
-        totwEntryPartial.setSongLinkUrl(songUrl);
-        int scrobbleCount = jsonTrack.get("userplaycount").getAsInt();
-        totwEntryPartial.setScrobbleCount(scrobbleCount);
-
-        int globalScrobbleCount = jsonTrack.get("playcount").getAsInt();
-        totwEntryPartial.setGlobalScrobbleCount(globalScrobbleCount);
-      }
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
+  /**
+   * Convert the given Spotify Track object into a LastFmTrack object.
+   * Note: the resulting object only contains the data required for
+   * listening parties, nothing else.
+   *
+   * @param track the Spotify track
+   * @return the last.fm track
+   */
+  public LastFmTrack getLastFmTrackInfo(Track track) {
+    return getLastFmTrackInfo(track, null);
   }
 
-  public JsonElement getLastFmTrackInfo(Track track) {
-    String artistName = SpotifyUtils.getFirstArtistName(track);
-    String trackName = track.getName();
-    String url = assembleLastFmApiUrlForTrackGetInfo(artistName, trackName);
-    return executeRequest(url, "track");
-  }
-
-  private JsonObject executeRequest(String url, String rootElement) {
+  /**
+   * Convert the given Spotify Track object into a LastFmTrack object.
+   * If a user is passed as well, will also include the user's scrobble count.
+   * Note: the resulting object only contains the data required for
+   * listening parties, nothing else.
+   *
+   * @param track the Spotify track
+   * @param lfmUserName (optional) the last.fm username
+   * @return the last.fm track
+   */
+  public LastFmTrack getLastFmTrackInfo(Track track, String lfmUserName) {
     try {
-      String rawJson = Jsoup.connect(url).ignoreContentType(true).execute().body();
-      JsonObject json = JsonParser.parseString(rawJson).getAsJsonObject();
-      if (!json.has("error")) {
-        return json.get(rootElement).getAsJsonObject();
-      }
+      String artistName = SpotifyUtils.getFirstArtistName(track);
+      String trackName = track.getName();
+      String url = assembleLastFmApiUrlForTrackGetInfo(artistName, trackName, Optional.ofNullable(lfmUserName));
+
+      return webClient.get()
+        .uri(url)
+        .retrieve()
+        .bodyToMono(LastFmTrack.class)
+        .block();
     } catch (Exception e) {
       e.printStackTrace();
+      return null;
     }
-    return null;
+  }
+
+  /**
+   * Fetch the user from last.fm for the given username.
+   * Note: the resulting object only contains the data required for
+   * listening parties, nothing else.
+   *
+   * @param lfmUserName the last.fm username
+   * @return the last.fm user
+   */
+  public LastFmUser getLastFmUserInfo(String lfmUserName) {
+    try {
+      String url = assembleLastFmApiUrlForUserInfo(lfmUserName);
+
+      return webClient.get()
+        .uri(url)
+        .retrieve()
+        .bodyToMono(LastFmUser.class)
+        .block();
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  private String assembleLastFmApiUrlForTrackGetInfo(String artistName, String trackName, Optional<String> lfmUserName) {
+    return lastFmApiUrl.cloneBuilder()
+      .queryParam("method", "track.getInfo")
+      .queryParam("artist", artistName)
+      .queryParam("track", trackName)
+      .queryParamIfPresent("username", lfmUserName)
+      .build().toUriString();
   }
 
   private String assembleLastFmApiUrlForUserInfo(String lfmUserName) {
@@ -106,26 +117,5 @@ public class LastFmService {
       .queryParam("method", "user.getInfo")
       .queryParam("username", lfmUserName)
       .build().toUriString();
-  }
-
-  private String assembleLastFmApiUrlForTrackGetInfo(String artistName, String trackName) {
-    return lastFmApiUrl.cloneBuilder()
-      .queryParam("method", "track.getInfo")
-      .queryParam("artist", escape(artistName))
-      .queryParam("track", escape(trackName))
-      .build().toUriString();
-  }
-
-  private String assembleLastFmApiUrlForTrackGetInfoForUser(String lfmUserName, String artistName, String trackName) {
-    return lastFmApiUrl.cloneBuilder()
-      .queryParam("method", "track.getInfo")
-      .queryParam("username", lfmUserName)
-      .queryParam("artist", escape(artistName))
-      .queryParam("track", escape(trackName))
-      .build().toUriString();
-  }
-
-  private String escape(String lfmUserName) {
-    return UriUtils.encode(lfmUserName, StandardCharsets.UTF_8);
   }
 }

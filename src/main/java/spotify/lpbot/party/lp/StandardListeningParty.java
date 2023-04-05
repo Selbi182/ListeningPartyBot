@@ -11,11 +11,10 @@ import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.util.DiscordUtils;
+import spotify.lpbot.party.data.lastfm.LastFmTrack;
+import spotify.lpbot.party.data.lastfm.LastFmWikiEntry;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
 import spotify.lpbot.party.service.LastFmService;
 import spotify.util.SpotifyUtils;
@@ -58,13 +57,11 @@ public class StandardListeningParty extends AbstractListeningParty {
     }
 
     // Description
-    JsonElement jsonTrack = lastFmService.getLastFmTrackInfo(track);
-    if (jsonTrack != null && jsonTrack.getAsJsonObject().has("wiki")) {
-      JsonObject jsonTrackObject = jsonTrack.getAsJsonObject();
-      JsonObject wiki = jsonTrackObject.get("wiki").getAsJsonObject();
-      String publishedText = wiki.get("published").getAsString();
-      String wikiText = wiki.get("summary").getAsString().split("<a href")[0];
-      String description = DiscordUtils.formatDescription(String.format("From last.fm (%s)", publishedText), wikiText);
+    LastFmTrack lastFmTrack = lastFmService.getLastFmTrackInfo(track);
+    if (lastFmTrack != null && lastFmTrack.hasWiki()) {
+      LastFmWikiEntry wiki = lastFmTrack.getWiki();
+      String wikiText = wiki.getSummary().split("<a href")[0];
+      String description = DiscordUtils.formatDescription(String.format("From last.fm (%s)",  wiki.getPublished()), wikiText);
       embed.setDescription(description);
     }
 
@@ -75,9 +72,8 @@ public class StandardListeningParty extends AbstractListeningParty {
     String songLength = SpotifyUtils.formatTime(track.getDurationMs());
     embed.addField("Song Length:", songLength, true);
 
-    if (jsonTrack != null && jsonTrack.getAsJsonObject().has("playcount")) {
-      int playCount = jsonTrack.getAsJsonObject().get("playcount").getAsInt();
-      String globalScrobbles = NumberFormat.getInstance(Locale.US).format(playCount);
+    if (lastFmTrack != null && lastFmTrack.hasScrobbles()) {
+      String globalScrobbles = NumberFormat.getInstance(Locale.US).format(lastFmTrack.getScrobbleCount());
       embed.addField("Global Scrobbles:", globalScrobbles, true);
     }
 

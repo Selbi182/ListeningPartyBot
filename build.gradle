@@ -47,10 +47,10 @@ dependencies {
 
     implementation 'se.michaelthelin.spotify:spotify-web-api-java:8.0.0'
     implementation 'org.javacord:javacord:3.8.0'
-//    implementation 'de.u-mass:lastfm-java:0.1.2'
     implementation 'org.jsoup:jsoup:1.15.4'
 
     implementation "org.springframework.boot:spring-boot-starter-web:$springVersion"
+    implementation "org.springframework.boot:spring-boot-starter-webflux:$springVersion"
 }
 
 

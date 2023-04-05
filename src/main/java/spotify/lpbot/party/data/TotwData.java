@@ -3,6 +3,11 @@ package spotify.lpbot.party.data;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import spotify.lpbot.party.data.lastfm.LastFmTrack;
+import spotify.lpbot.party.data.lastfm.LastFmUser;
+
 public class TotwData {
   private final String headline;
   private final List<TotwData.Entry> totwEntries;
@@ -35,9 +40,10 @@ public class TotwData {
     private final String writeUp;
 
     // Full data (taken from the last.fm API)
-    private String songLinkUrl;
     private String userPageUrl;
     private String profilePictureUrl;
+
+    private String songLinkUrl;
     private Integer scrobbleCount;
     private Integer globalScrobbleCount;
 
@@ -46,6 +52,19 @@ public class TotwData {
       this.lastFmName = lastFmName;
       this.spotifyLink = spotifyLink;
       this.writeUp = writeUp;
+    }
+
+    @JsonIgnore
+    public void attachUserInfo(LastFmUser lastFmUserInfo) {
+      this.userPageUrl = lastFmUserInfo.getUrl();
+      this.profilePictureUrl = lastFmUserInfo.getSmallImageUrl();
+    }
+
+    @JsonIgnore
+    public void attachTrackInfo(LastFmTrack lastFmTrack) {
+      this.songLinkUrl = lastFmTrack.getUrl();
+      this.globalScrobbleCount = lastFmTrack.getScrobbleCount();
+      this.scrobbleCount = lastFmTrack.getUserScrobbleCount();
     }
 
     public String getName() {
