@@ -14,6 +14,16 @@ public class DiscordUtils {
   private DiscordUtils() {
   }
 
+  /**
+   * The URL homepage for the bot
+   */
+  public static final String LPBOT_URL = "lpbot.selbi.club";
+
+  /**
+   * The URL homepage for the bot (with https:// prefix)
+   */
+  public static final String LPBOT_URL_HTTPS = "https:// " + LPBOT_URL;
+
   ////////////////
   // Builders
 

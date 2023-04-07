@@ -18,6 +18,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import spotify.api.events.SpotifyApiLoggedInEvent;
+import spotify.lpbot.discord.util.DiscordUtils;
 
 @EnableScheduling
 @Component
@@ -48,6 +49,9 @@ public class DiscordBot {
         .login()
         .join();
 
+      // We don't need to cache anything, as slash commands are processed immediately
+//      this.api.setMessageCacheSize(0, 0); // TODO fix console spam
+
       // Set to online and set status
       refreshStatus();
 
@@ -66,12 +70,16 @@ public class DiscordBot {
     }
   }
 
-  @Scheduled(fixedRate = 1, timeUnit = TimeUnit.HOURS)
+  /**
+   * Refreshes the activity string of the but with the current server count and a link to the homepage.
+   * Automatically called once per hour.
+   */
+  @Scheduled(initialDelay = 1, fixedRate = 1, timeUnit = TimeUnit.HOURS)
   void refreshStatus() {
     if (api != null) {
       api.updateStatus(UserStatus.ONLINE);
       int serverCount = api.getServers().size();
-      api.updateActivity(ActivityType.LISTENING, String.format("/help | %d server%s | Listening Parties", serverCount, serverCount != 1 ? "s" : ""));
+      api.updateActivity(ActivityType.LISTENING, String.format("/help \u2022 %d server%s \u2022 %s", serverCount, serverCount != 1 ? "s" : "", DiscordUtils.LPBOT_URL));
     }
   }
 }

@@ -123,7 +123,7 @@ public class DiscordMessageHandler {
       + "> **2.** Type `/start` to start the actual listening party. After a short countdown (by default, 5 seconds) the party starts!"
       + "\n\n"
       + "For a list of all commands, type:\n`/commands`\n\n"
-      + "For more information, visit the GitHub page:\nhttps://github.com/Selbi182/ListeningPartyBot");
+      + "For more information, check the homepage:\n" + DiscordUtils.LPBOT_URL_HTTPS);
 
     DiscordUtils.respondWithEmbed(responder, tutorialEmbed);
   }
@@ -131,7 +131,7 @@ public class DiscordMessageHandler {
   private void sendCommandsEmbed(InteractionOriginalResponseUpdater responder) {
     EmbedBuilder commandsEmbed = new EmbedBuilder();
     commandsEmbed.setTitle("Listening Party Bot \u2013 Commands");
-    commandsEmbed.addField("General info and basic tutorial:", "> https://github.com/Selbi182/ListeningPartyBot", false);
+    commandsEmbed.addField("General info and basic tutorial:", "> " + DiscordUtils.LPBOT_URL_HTTPS, false);
     for (DiscordSlashCommands.LPBotCommand command : DiscordSlashCommands.getCommands()) {
       commandsEmbed.addField(String.format("`/%s`", command.getCommandWithSubCommand()), "> " + command.getFullDescription());
     }
