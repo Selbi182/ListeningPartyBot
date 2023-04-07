@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -11,12 +12,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import org.javacord.api.entity.Icon;
+import org.javacord.api.entity.channel.ServerChannel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.server.Server;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
 import de.selbi.colorfetch.data.ColorFetchResult;
+import se.michaelthelin.spotify.enums.ModelObjectType;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
@@ -228,7 +233,15 @@ public abstract class AbstractListeningParty {
   private void printFinalMessage() {
     currentTrackListIndex = 0;
     this.state = State.READY;
-    DiscordUtils.sendSimpleEmbed(channel, finalMessages.getRandomFinalMessage());
+
+    EmbedBuilder finalEmbed = DiscordUtils.createSimpleEmbed(finalMessages.getRandomFinalMessage(), false);
+    attachServerName(finalEmbed);
+    if (ModelObjectType.ALBUM.equals(trackListWrapper.getLpType())) {
+      attachFooter(getCurrentTrack(), finalEmbed);
+      finalEmbed.setColor(getColorForCurrentTrack());
+    }
+    channel.sendMessage(finalEmbed);
+
     logLpEnd(channel, false);
   }
 
@@ -260,6 +273,40 @@ public abstract class AbstractListeningParty {
         }
       }
     }, COUNTDOWN_INTERVAL_MS, COUNTDOWN_INTERVAL_MS, TimeUnit.MILLISECONDS);
+  }
+
+  ////////////////////
+  // Attachment Utils
+
+  /**
+   * Attach the server name as author in the following format:
+   * [Server Image] Listening Party on: [Server Name]
+   */
+  protected void attachServerName(EmbedBuilder embed) {
+    Optional<ServerChannel> serverChannel = getChannel().asServerChannel();
+    if (serverChannel.isPresent()) {
+      Server server = serverChannel.get().getServer();
+      String serverName = server.getName();
+      Optional<Icon> serverIcon = server.getIcon();
+      String lpTitle = "Listening Party on: " + serverName;
+      if (serverIcon.isPresent()) {
+        embed.setAuthor(lpTitle, null, serverIcon.get());
+      } else {
+        embed.setAuthor(lpTitle);
+      }
+    }
+  }
+
+  /**
+   * Attach a footer of the current track's album in the following format:
+   * [Release Type]: [Artist Name] - [Album Name] (Release Year)
+   */
+  protected void attachFooter(Track track, EmbedBuilder embed) {
+    String albumArtists = SpotifyUtils.joinArtists(track.getAlbum().getArtists());
+    String albumName = track.getAlbum().getName();
+    String albumReleaseYear = SpotifyUtils.findReleaseYear(track);
+    String releaseType = track.getAlbum().getAlbumType().toString();
+    embed.setFooter(String.format("%s: %s \u2013 %s (%s)", releaseType, albumArtists, albumName, albumReleaseYear));
   }
 
   ////////////////////
@@ -298,9 +345,12 @@ public abstract class AbstractListeningParty {
     return trackListWrapper;
   }
 
-  public TextChannel getChannel() {
+  protected TextChannel getChannel() {
     return channel;
   }
+
+  ////////////////////
+  // Log Utils
 
   private void logLpStart(TextChannel textChannel) {
     LpUtils.logLpEvent(textChannel, logger, "LP started");
@@ -309,7 +359,6 @@ public abstract class AbstractListeningParty {
   private void logLpEnd(TextChannel textChannel, boolean aborted) {
     LpUtils.logLpEvent(textChannel, logger, "LP " + (aborted ? "aborted" : "concluded"));
   }
-
 
   ////////////////////
   // Abstract Discord logic

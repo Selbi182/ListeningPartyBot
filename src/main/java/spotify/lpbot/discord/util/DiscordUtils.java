@@ -31,20 +31,20 @@ public class DiscordUtils {
    * Create a simple embed with only the description set
    */
   public static EmbedBuilder createSimpleEmbed(String content) {
-    return createSimpleEmbed(content, null, false);
+    return createSimpleEmbed(content, false, null);
   }
 
   /**
    * Create a simple embed with only the description set
    */
   public static EmbedBuilder createSimpleEmbed(String content, boolean useTitle) {
-    return createSimpleEmbed(content, null, useTitle);
+    return createSimpleEmbed(content, useTitle, null);
   }
 
   /**
    * Create a simple embed with only the description and color set
    */
-  public static EmbedBuilder createSimpleEmbed(String content, Color color, boolean useTitle) {
+  public static EmbedBuilder createSimpleEmbed(String content, boolean useTitle, Color color) {
     EmbedBuilder embed = new EmbedBuilder();
     if (useTitle) {
       embed.setTitle(content);
@@ -59,7 +59,7 @@ public class DiscordUtils {
    * Create a simple embed with only the description. The color red is predefined
    */
   public static EmbedBuilder createErrorEmbed(String content) {
-    return createSimpleEmbed("**ERROR:** " + content, Color.RED, false);
+    return createSimpleEmbed("**ERROR:** " + content, false, Color.RED);
   }
 
   ////////////////

@@ -1,9 +1,9 @@
 package spotify.lpbot.party.data.tracklist;
 
-import java.awt.Color;
 import java.util.List;
 
 import de.selbi.colorfetch.data.ColorFetchResult;
+import se.michaelthelin.spotify.enums.ModelObjectType;
 import se.michaelthelin.spotify.model_objects.specification.Album;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 
@@ -16,6 +16,11 @@ public class AlbumTrackListWrapper implements TrackListWrapper {
     this.album = album;
     this.tracks = tracks;
     this.color = color;
+  }
+
+  @Override
+  public ModelObjectType getLpType() {
+    return ModelObjectType.ALBUM;
   }
 
   @Override

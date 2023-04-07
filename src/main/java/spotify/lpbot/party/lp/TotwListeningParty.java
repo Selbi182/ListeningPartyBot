@@ -98,11 +98,7 @@ public class TotwListeningParty extends AbstractListeningParty{
     embed.setColor(embedColor);
 
     // Album: [Artist] - [Album] ([Release year])
-    String albumArtists = SpotifyUtils.joinArtists(track.getAlbum().getArtists());
-    String albumName = track.getAlbum().getName();
-    String albumReleaseYear = SpotifyUtils.findReleaseYear(track);
-    String releaseType = track.getAlbum().getAlbumType().toString();
-    embed.setFooter(String.format("%s: %s \u2013 %s (%s)", releaseType, albumArtists, albumName, albumReleaseYear));
+    attachFooter(track, embed);
 
     // Send off the embed to the Discord channel
     return embed;
