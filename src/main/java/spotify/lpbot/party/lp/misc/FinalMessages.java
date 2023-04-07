@@ -1,6 +1,7 @@
 package spotify.lpbot.party.lp.misc;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -22,7 +23,7 @@ public class FinalMessages {
     "\uD83C\uDFA7"  // headphones
   );
 
-  private static final String FINAL_MESSAGES_FILE = "spotify/lpbot/party/lp/misc/final_messages.txt";
+  private static final String FINAL_MESSAGES_FILE = "final_messages.txt";
 
   private final Random random;
   private final List<String> finalMessages;
@@ -39,9 +40,18 @@ public class FinalMessages {
    */
   public String getRandomFinalMessage() {
     String leadingEmoji = randomEntryFromArray(MUSICAL_EMOJIS);
-    String trailingEmoji = randomEntryFromArray(MUSICAL_EMOJIS);
+
+    // Trailing emoji should be different to leading emoji, but it shouldn't cause an infinite loop
+    String trailingEmoji = null;
+    for (int i = 0; i < 10; i++) {
+      trailingEmoji = randomEntryFromArray(MUSICAL_EMOJIS);
+      if (!trailingEmoji.equals(leadingEmoji)) {
+        break;
+      }
+    }
+
     String finalMessage = randomEntryFromArray(finalMessages);
-    return String.format("%s %s %s", leadingEmoji, finalMessage, trailingEmoji);
+    return String.format("%s\u2000%s\u2000%s", leadingEmoji, finalMessage, trailingEmoji);
   }
 
   private String randomEntryFromArray(List<String> arr) {
@@ -49,7 +59,9 @@ public class FinalMessages {
   }
 
   private List<String> readFinalMessagesFile() {
-    InputStream resource = getClass().getClassLoader().getResourceAsStream(FINAL_MESSAGES_FILE);
+    String packageName = getClass().getPackageName().replaceAll("\\.", "/");
+    String finalMessagesFilePath = new File(packageName, FINAL_MESSAGES_FILE).getPath();
+    InputStream resource = getClass().getClassLoader().getResourceAsStream(finalMessagesFilePath);
     return new BufferedReader(new InputStreamReader(Objects.requireNonNull(resource)))
       .lines()
       .filter(line -> !line.isBlank())
