@@ -1,7 +1,7 @@
 # Listening Party Bot
 ![Blahaj](https://i.imgur.com/NuEmaM9.png)
 
-A Discord bot used to set up, organize, and host listening parties for Spotify playlists or albums! 
+A Spotify-powered Discord bot for hosting listening parties! 
 
 **Use the following URL to invite the bot to your server:**\
 https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=18432&scope=bot
@@ -12,17 +12,17 @@ https://discord.com/oauth2/authorize?client_id=1062043789646118982&permissions=1
 Once the bot is invited to your server, make sure it has writing permissions. Once that's done, you can manage listening parties on a per-channel basis (threads aren't supported yet). Here is how you do that:
 
 1. Type `/set` and pass a URL to a Spotify album or playlist (you can get the link by right-clicking on the playlist or album and selecting _Share → Copy Album/Playlist Link_): \
-![/set](https://i.imgur.com/fHAfr7J.png)
+![/set](https://i.imgur.com/M0Buzb5.png)
 
 2. The bot will then verify and preprocess the given target. If everything looks good, a message with the link will pop up, so that everyone can get ready: \
-![/set](https://i.imgur.com/mCwxRZ2.png)
+![/set](https://i.imgur.com/eNPYJob.png)
 
 3. Type `/start` to start the actual listening party. A custom countdown (in seconds) can be passed to this command. By default, it's 5 seconds. \
-![/start](https://i.imgur.com/qic5gG2.png)
+![/start](https://i.imgur.com/fmJn7ab.png)
 
 And that's all there is to it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. When possible, it will also display some additional information of the current song from [last.fm's wiki](https://www.last.fm/music/Rammstein/_/Ohne+dich/+wiki):
 
-![last.fm wiki](https://i.imgur.com/fRhOnyk.png)
+![last.fm wiki](https://i.imgur.com/ebv9jUu.png)
 
 ## Commands
 Here's a full list of every command and what it does:
@@ -30,7 +30,7 @@ Here's a full list of every command and what it does:
 ### `/nowplaying` or `/np`
 Print info of the currently ongoing Listening Party for this channel. Useful for late joiners, because it also displays the timestamp of the current song:
 
-![/nowplaying](https://i.imgur.com/MCN5pZf.png)
+![/nowplaying](https://i.imgur.com/LIlXCop.png)
 
 ### `/set <url>`
 Set the target link (_url_: the URL to the Spotify playlist or album)
