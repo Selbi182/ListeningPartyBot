@@ -1,4 +1,4 @@
-# Listening Party Bot
+# Discord – Listening Party Bot
 ![Blahaj](https://i.imgur.com/NuEmaM9.png)
 
 A Spotify-powered Discord bot for hosting listening parties! 
@@ -20,9 +20,13 @@ Once the bot is invited to your server, make sure it has writing permissions. On
 3. Type `/start` to start the actual listening party. A custom countdown (in seconds) can be passed to this command. By default, it's 5 seconds. \
 ![/start](https://i.imgur.com/fmJn7ab.png)
 
-And that's all there is to it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. When possible, it will also display some additional information of the current song from [last.fm's wiki](https://www.last.fm/music/Rammstein/_/Ohne+dich/+wiki):
+And that's all there is to it! From here on out, the bot will provide detailed information about whichever song is currently playing in a synchronized manner. When possible, it will also display some additional information of the current song from [last.fm's wiki](https://www.last.fm/music/Apocalyptica/_/I+Don%27t+Care/+wiki):
 
 ![last.fm wiki](https://i.imgur.com/ebv9jUu.png)
+
+This continues until every song of the given playlist or album has been played. At the end, you'll get a random final message:
+
+![Final Message](https://i.imgur.com/X0lUDkB.png)
 
 ## Commands
 Here's a full list of every command and what it does:
