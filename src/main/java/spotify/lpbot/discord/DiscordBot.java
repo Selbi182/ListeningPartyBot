@@ -66,7 +66,7 @@ public class DiscordBot {
     }
   }
 
-  @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
+  @Scheduled(fixedRate = 1, timeUnit = TimeUnit.HOURS)
   void refreshStatus() {
     if (api != null) {
       api.updateStatus(UserStatus.ONLINE);

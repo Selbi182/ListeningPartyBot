@@ -1,8 +1,10 @@
 package spotify.lpbot.party.service;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import javax.annotation.PostConstruct;
+import javax.xml.crypto.Data;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
@@ -10,9 +12,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
+import reactor.core.publisher.Mono;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.party.data.lastfm.LastFmTrack;
 import spotify.lpbot.party.data.lastfm.LastFmUser;
@@ -24,19 +29,17 @@ public class LastFmService {
   private String lastFmApiToken;
 
   private WebClient webClient;
-  private UriComponentsBuilder lastFmApiUrl;
+  private UriComponentsBuilder lastFmApiUrlParams;
 
   @PostConstruct
   void createWebClient() {
     ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
     this.webClient = WebClient.builder()
+      .baseUrl("https://ws.audioscrobbler.com/2.0")
       .codecs(clientCodecConfigurer -> clientCodecConfigurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(mapper)))
       .build();
 
-    this.lastFmApiUrl = UriComponentsBuilder.newInstance()
-      .scheme("https")
-      .host("ws.audioscrobbler.com")
-      .path("/2.0")
+    this.lastFmApiUrlParams = UriComponentsBuilder.newInstance()
       .queryParam("api_key", lastFmApiToken)
       .queryParam("format", "json");
   }
@@ -68,11 +71,12 @@ public class LastFmService {
       String artistName = SpotifyUtils.getFirstArtistName(track);
       String trackName = track.getName();
       String url = assembleLastFmApiUrlForTrackGetInfo(artistName, trackName, Optional.ofNullable(lfmUserName));
-
       return webClient.get()
         .uri(url)
         .retrieve()
         .bodyToMono(LastFmTrack.class)
+        .single()
+        .onErrorComplete()
         .block();
     } catch (Exception e) {
       e.printStackTrace();
@@ -91,11 +95,12 @@ public class LastFmService {
   public LastFmUser getLastFmUserInfo(String lfmUserName) {
     try {
       String url = assembleLastFmApiUrlForUserInfo(lfmUserName);
-
       return webClient.get()
         .uri(url)
         .retrieve()
         .bodyToMono(LastFmUser.class)
+        .single()
+        .onErrorComplete()
         .block();
     } catch (Exception e) {
       e.printStackTrace();
@@ -104,7 +109,7 @@ public class LastFmService {
   }
 
   private String assembleLastFmApiUrlForTrackGetInfo(String artistName, String trackName, Optional<String> lfmUserName) {
-    return lastFmApiUrl.cloneBuilder()
+    return lastFmApiUrlParams.cloneBuilder()
       .queryParam("method", "track.getInfo")
       .queryParam("artist", artistName)
       .queryParam("track", trackName)
@@ -113,7 +118,7 @@ public class LastFmService {
   }
 
   private String assembleLastFmApiUrlForUserInfo(String lfmUserName) {
-    return lastFmApiUrl.cloneBuilder()
+    return lastFmApiUrlParams.cloneBuilder()
       .queryParam("method", "user.getInfo")
       .queryParam("username", lfmUserName)
       .build().toUriString();

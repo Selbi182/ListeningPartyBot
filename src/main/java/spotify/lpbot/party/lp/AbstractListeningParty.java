@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
@@ -19,6 +20,8 @@ import de.selbi.colorfetch.data.ColorFetchResult;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
+import spotify.lpbot.party.lp.misc.FinalMessages;
+import spotify.lpbot.party.lp.misc.LpUtils;
 import spotify.util.SpotifyUtils;
 
 public abstract class AbstractListeningParty {
@@ -36,21 +39,27 @@ public abstract class AbstractListeningParty {
 
   private final TextChannel channel;
   private final TrackListWrapper trackListWrapper;
+  private final FinalMessages finalMessages;
+  private final Logger logger;
 
   private State state;
   private int currentTrackListIndex;
   private ScheduledFuture<?> nextFuture;
   private Long remainingTimeAtTimeOfPause;
 
-  public AbstractListeningParty(TextChannel channel, TrackListWrapper trackListWrapper) {
+
+  public AbstractListeningParty(TextChannel channel, TrackListWrapper trackListWrapper, FinalMessages finalMessages) {
     this.channel = channel;
-    this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     this.trackListWrapper = trackListWrapper;
+    this.finalMessages = finalMessages;
+    this.logger = Logger.getLogger(AbstractListeningParty.class.getName());
+
+    this.scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     this.currentTrackListIndex = 0;
     this.state = State.READY;
   }
 
-  public boolean isOverwritable() {
+  public boolean isReplaceable() {
     return isState(State.READY);
   }
 
@@ -60,6 +69,7 @@ public abstract class AbstractListeningParty {
       remainingTimeAtTimeOfPause = null;
       state = State.COUNTDOWN;
       createAndStartCountdown(responder, countdownEmbed, countdown, false);
+      logLpStart(channel);
     } else if (isState(State.PAUSED)) {
       EmbedBuilder resumeEmbed = DiscordUtils.createSimpleEmbed("Resuming Listening Party in...", true);
       state = State.RESUME_COUNTDOWN;
@@ -76,6 +86,7 @@ public abstract class AbstractListeningParty {
       currentTrackListIndex = 0;
       remainingTimeAtTimeOfPause = null;
       DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party stopped!");
+      logLpEnd(channel, true);
     } else {
       DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active");
     }
@@ -217,7 +228,8 @@ public abstract class AbstractListeningParty {
   private void printFinalMessage() {
     currentTrackListIndex = 0;
     this.state = State.READY;
-    DiscordUtils.sendSimpleEmbed(channel, FinalMessages.getRandomFinalMessage());
+    DiscordUtils.sendSimpleEmbed(channel, finalMessages.getRandomFinalMessage());
+    logLpEnd(channel, false);
   }
 
   private void createAndStartCountdown(InteractionOriginalResponseUpdater responder, EmbedBuilder countdownEmbed, int countdown, boolean resume) {
@@ -289,6 +301,15 @@ public abstract class AbstractListeningParty {
   public TextChannel getChannel() {
     return channel;
   }
+
+  private void logLpStart(TextChannel textChannel) {
+    LpUtils.logLpEvent(textChannel, logger, "LP started");
+  }
+
+  private void logLpEnd(TextChannel textChannel, boolean aborted) {
+    LpUtils.logLpEvent(textChannel, logger, "LP " + (aborted ? "aborted" : "concluded"));
+  }
+
 
   ////////////////////
   // Abstract Discord logic

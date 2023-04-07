@@ -13,6 +13,7 @@ import spotify.lpbot.party.data.TotwData;
 import spotify.lpbot.party.data.lastfm.LastFmTrack;
 import spotify.lpbot.party.data.lastfm.LastFmUser;
 import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
+import spotify.lpbot.party.lp.misc.FinalMessages;
 import spotify.lpbot.party.service.LastFmService;
 import spotify.util.SpotifyUtils;
 
@@ -20,8 +21,8 @@ public class TotwListeningParty extends AbstractListeningParty{
   private final TotwTrackListWrapper totwTrackListWrapper;
   private final LastFmService lastFmService;
 
-  public TotwListeningParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper, LastFmService lastFmService) {
-    super(channel, totwTrackListWrapper);
+  public TotwListeningParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper, LastFmService lastFmService, FinalMessages finalMessages) {
+    super(channel, totwTrackListWrapper, finalMessages);
     this.totwTrackListWrapper = totwTrackListWrapper;
     this.lastFmService = lastFmService;
   }

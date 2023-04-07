@@ -16,14 +16,15 @@ import spotify.lpbot.discord.util.DiscordUtils;
 import spotify.lpbot.party.data.lastfm.LastFmTrack;
 import spotify.lpbot.party.data.lastfm.LastFmWikiEntry;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
+import spotify.lpbot.party.lp.misc.FinalMessages;
 import spotify.lpbot.party.service.LastFmService;
 import spotify.util.SpotifyUtils;
 
 public class StandardListeningParty extends AbstractListeningParty {
   private final LastFmService lastFmService;
 
-  public StandardListeningParty(TextChannel channel, TrackListWrapper trackListWrapper, LastFmService lastFmService) {
-    super(channel, trackListWrapper);
+  public StandardListeningParty(TextChannel channel, TrackListWrapper trackListWrapper, LastFmService lastFmService, FinalMessages finalMessages) {
+    super(channel, trackListWrapper, finalMessages);
     this.lastFmService = lastFmService;
   }
 
