@@ -17,13 +17,11 @@ public class DiscordSlashCommands {
     LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down, default: 5", false)),
     LPBotCommand.of("quickstart", "A combination of /set and /start to instantly start a Listening Party without countdown", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
     LPBotCommand.of("stop", "Cancel a current Listening Party and reset it to the beginning"),
-    LPBotCommand.of("next", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
-    LPBotCommand.of("skip", "Skip the current song in the Listening Party (alias for /next)", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
+    LPBotCommand.of("next", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false), "skip"),
     LPBotCommand.of("previous", "Play the previous song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to go back, default: 1", false)),
     LPBotCommand.of("restart", "Restart the currently playing song"),
     LPBotCommand.of("pause", "Pause the current Listening Party (resume by typing /start again)"),
-    LPBotCommand.of("nowplaying", "Print info of the current Listening Party for this channel"),
-    LPBotCommand.of("np", "Print info of the current Listening Party for this channel (alias for /nowplaying)"),
+    LPBotCommand.of("nowplaying", "Print info of the current Listening Party for this channel", "np"),
     LPBotCommand.of("link", "Print the set target link"),
     LPBotCommand.of("help", "Print a basic tutorial of how the bot works"),
     LPBotCommand.of("commands", "Print all commands as a chat message"),
@@ -47,24 +45,30 @@ public class DiscordSlashCommands {
   static class LPBotCommand {
     private final String command;
     private final String description;
-    private SlashCommandOption subCommand;
+    private final SlashCommandOption subCommand;
+    private final String alias;
 
-    LPBotCommand(String command, String description) {
+    LPBotCommand(String command, String description, SlashCommandOption subCommand, String alias) {
       this.command = command;
       this.description = description;
-    }
-
-    LPBotCommand(String command, String description, SlashCommandOption subCommand) {
-      this(command, description);
       this.subCommand = subCommand;
+      this.alias = alias;
     }
 
     private static LPBotCommand of(String command, String description) {
-      return new LPBotCommand(command, description);
+      return new LPBotCommand(command, description, null, null);
+    }
+
+    private static LPBotCommand of(String command, String description, String alias) {
+      return new LPBotCommand(command, description, null, alias);
     }
 
     private static LPBotCommand of(String command, String description, SlashCommandOption subCommand) {
-      return new LPBotCommand(command, description, subCommand);
+      return new LPBotCommand(command, description, subCommand, null);
+    }
+
+    private static LPBotCommand of(String command, String description, SlashCommandOption subCommand, String alias) {
+      return new LPBotCommand(command, description, subCommand, alias);
     }
 
     public String getCommand() {
@@ -77,6 +81,10 @@ public class DiscordSlashCommands {
 
     public Optional<SlashCommandOption> getSubCommand() {
       return Optional.ofNullable(subCommand);
+    }
+
+    public Optional<String> getAlias() {
+      return Optional.ofNullable(alias);
     }
 
     public String getFullDescription() {

@@ -133,7 +133,11 @@ public class DiscordMessageHandler {
     commandsEmbed.setTitle("Listening Party Bot \u2013 Commands");
     commandsEmbed.addField("General info and basic tutorial:", "> " + DiscordUtils.LPBOT_URL_HTTPS, false);
     for (DiscordSlashCommands.LPBotCommand command : DiscordSlashCommands.getCommands()) {
-      commandsEmbed.addField(String.format("`/%s`", command.getCommandWithSubCommand()), "> " + command.getFullDescription());
+      String commandFormatted = String.format("`/%s`", command.getCommandWithSubCommand());
+      if (command.getAlias().isPresent()) {
+        commandFormatted = String.format("`/%s` or %s", command.getAlias().get(), commandFormatted);
+      }
+      commandsEmbed.addField(commandFormatted, "> " + command.getFullDescription());
     }
     DiscordUtils.respondWithEmbed(responder, commandsEmbed);
   }
