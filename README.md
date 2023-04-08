@@ -1,5 +1,5 @@
 # Discord – Listening Party Bot
-![Blahaj](https://i.imgur.com/NuEmaM9.png)
+![Blahaj](https://i.imgur.com/yH9Jq4p.png)
 
 A Spotify-powered Discord bot for hosting listening parties! 
 
