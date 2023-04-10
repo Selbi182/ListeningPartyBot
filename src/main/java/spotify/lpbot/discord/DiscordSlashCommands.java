@@ -17,18 +17,18 @@ public class DiscordSlashCommands {
     LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down, default: 5", false)),
     LPBotCommand.of("quickstart", "A combination of /set and /start to instantly start a Listening Party without countdown", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
     LPBotCommand.of("stop", "Cancel a current Listening Party and reset it to the beginning"),
-    LPBotCommand.of("next", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false), "skip"),
+    LPBotCommand.of("skip", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
     LPBotCommand.of("previous", "Play the previous song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to go back, default: 1", false)),
     LPBotCommand.of("restart", "Restart the currently playing song"),
     LPBotCommand.of("pause", "Pause the current Listening Party (resume by typing /start again)"),
-    LPBotCommand.of("nowplaying", "Print info of the current Listening Party for this channel", "np"),
+    LPBotCommand.of("np", "Print info of the current Listening Party for this channel (\"now playing\")"),
     LPBotCommand.of("link", "Print the set target link"),
     LPBotCommand.of("help", "Print a basic tutorial of how the bot works"),
     LPBotCommand.of("commands", "Print all commands as a chat message"),
     LPBotCommand.of("totw", "[Experimental] Host a Track-of-the-Week party", SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the TOTW info data", true))
   );
 
-  public static List<LPBotCommand> getCommands() {
+  public static List<LPBotCommand> getLpBotCommands() {
     return DISCORD_SLASH_COMMANDS;
   }
 
@@ -42,33 +42,25 @@ public class DiscordSlashCommands {
     return Set.copyOf(builder);
   }
 
-  static class LPBotCommand {
+  public static class LPBotCommand {
     private final String command;
     private final String description;
     private final SlashCommandOption subCommand;
-    private final String alias;
 
-    LPBotCommand(String command, String description, SlashCommandOption subCommand, String alias) {
+    private Long id;
+
+    LPBotCommand(String command, String description, SlashCommandOption subCommand) {
       this.command = command;
       this.description = description;
       this.subCommand = subCommand;
-      this.alias = alias;
     }
 
     private static LPBotCommand of(String command, String description) {
-      return new LPBotCommand(command, description, null, null);
-    }
-
-    private static LPBotCommand of(String command, String description, String alias) {
-      return new LPBotCommand(command, description, null, alias);
+      return new LPBotCommand(command, description, null);
     }
 
     private static LPBotCommand of(String command, String description, SlashCommandOption subCommand) {
-      return new LPBotCommand(command, description, subCommand, null);
-    }
-
-    private static LPBotCommand of(String command, String description, SlashCommandOption subCommand, String alias) {
-      return new LPBotCommand(command, description, subCommand, alias);
+      return new LPBotCommand(command, description, subCommand);
     }
 
     public String getCommand() {
@@ -83,10 +75,6 @@ public class DiscordSlashCommands {
       return Optional.ofNullable(subCommand);
     }
 
-    public Optional<String> getAlias() {
-      return Optional.ofNullable(alias);
-    }
-
     public String getFullDescription() {
       return getSubCommand()
         .map(subCommand -> String.format("%s (`%s`: %s)", getDescription(), subCommand.getName(), subCommand.getDescription()))
@@ -97,6 +85,14 @@ public class DiscordSlashCommands {
       return getSubCommand()
         .map(subCommand -> String.format("%s <%s>", getCommand(), subCommand.getName()))
         .orElse(getCommand());
+    }
+
+    public void setId(Long id) {
+      this.id = id;
+    }
+
+    public Long getId() {
+      return id;
     }
   }
 }

@@ -111,7 +111,7 @@ public abstract class AbstractListeningParty {
       currentTrackListIndex += skipAmountLimited;
       remainingTimeAtTimeOfPause = null;
       nowPlaying(responder);
-      DiscordUtils.updateWithSimpleEmbed(responder, skipAmountLimited + " song(s) skipped! (Note: Listening Party is still paused. Use `/start` to resume)");
+      DiscordUtils.updateWithSimpleEmbed(responder, skipAmountLimited + " song(s) skipped! (Note: Listening Party is still paused. Use " + DiscordUtils.findClickableCommand("start") + " to resume)");
     } else {
       DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active");
     }
@@ -130,7 +130,7 @@ public abstract class AbstractListeningParty {
       currentTrackListIndex -= goBackAmountLimited;
       remainingTimeAtTimeOfPause = null;
       nowPlaying(responder);
-      DiscordUtils.updateWithSimpleEmbed(responder, "Went back " + goBackAmountLimited + " song(s)! (Note: Listening Party is still paused. Use `/start` to resume)");
+      DiscordUtils.updateWithSimpleEmbed(responder, "Went back " + goBackAmountLimited + " song(s)! (Note: Listening Party is still paused. Use " + DiscordUtils.findClickableCommand("start") + " to resume)");
     } else {
       DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active");
     }
@@ -156,7 +156,7 @@ public abstract class AbstractListeningParty {
       nowPlaying(responder);
     } else if (isState(State.PAUSED)) {
       remainingTimeAtTimeOfPause = null;
-      DiscordUtils.updateWithSimpleEmbed(responder, "Song restarted! (Note: Listening Party is still paused. Use `/start` to resume)");
+      DiscordUtils.updateWithSimpleEmbed(responder, "Song restarted! (Note: Listening Party is still paused. Use " + DiscordUtils.findClickableCommand("start") + " to resume)");
     } else {
       DiscordUtils.updateWithErrorEmbed(responder, "Listening Party is not active or can't be interacted with right now");
     }

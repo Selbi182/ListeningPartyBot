@@ -60,7 +60,6 @@ public class DiscordMessageHandler {
               case "stop":
                 lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.stop(responder));
                 break;
-              case "next":
               case "skip":
                 Optional<SlashCommandInteractionOption> optionalSkipAmount = slashCommandInteraction.getOptionByName("amount");
                 getSkipAmount(optionalSkipAmount)
@@ -83,7 +82,6 @@ public class DiscordMessageHandler {
               case "restart":
                 lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.restart(responder));
                 break;
-              case "nowplaying":
               case "np":
                 lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.nowPlaying(responder));
                 break;
@@ -117,12 +115,12 @@ public class DiscordMessageHandler {
     tutorialEmbed.setTitle("Listening Party Bot \u2013 Basic Usage");
 
     tutorialEmbed.setDescription("A listening party can be started in just two simple steps:\n\n"
-      + "> **1.** Type `/set` and pass a URL to a Spotify album or playlist. "
+      + "> **1.** Type " + DiscordUtils.findClickableCommand("set") + " and pass a URL to a Spotify album or playlist. "
       + "A message with the target link will pop up so that everyone can get ready.\n"
       + "> \n"
-      + "> **2.** Type `/start` to start the actual listening party. After a short countdown (by default, 5 seconds) the party starts!"
+      + "> **2.** Type " + DiscordUtils.findClickableCommand("start") + " to start the actual listening party. After a short countdown (by default, 5 seconds) the party starts!"
       + "\n\n"
-      + "For a list of all commands, type:\n`/commands`\n\n"
+      + "For a list of all commands, type:\n" + DiscordUtils.findClickableCommand("commands") + "\n\n"
       + "For more information, check the homepage:\n" + DiscordUtils.LPBOT_URL_HTTPS);
 
     DiscordUtils.respondWithEmbed(responder, tutorialEmbed);
@@ -132,11 +130,9 @@ public class DiscordMessageHandler {
     EmbedBuilder commandsEmbed = new EmbedBuilder();
     commandsEmbed.setTitle("Listening Party Bot \u2013 Commands");
     commandsEmbed.addField("General info and basic tutorial:", "> " + DiscordUtils.LPBOT_URL_HTTPS, false);
-    for (DiscordSlashCommands.LPBotCommand command : DiscordSlashCommands.getCommands()) {
-      String commandFormatted = String.format("`/%s`", command.getCommandWithSubCommand());
-      if (command.getAlias().isPresent()) {
-        commandFormatted = String.format("`/%s` or %s", command.getAlias().get(), commandFormatted);
-      }
+
+    for (DiscordSlashCommands.LPBotCommand command : DiscordSlashCommands.getLpBotCommands()) {
+      String commandFormatted = DiscordUtils.asClickableCommand(command.getCommand(), command.getId());
       commandsEmbed.addField(commandFormatted, "> " + command.getFullDescription());
     }
     DiscordUtils.respondWithEmbed(responder, commandsEmbed);
@@ -144,7 +140,7 @@ public class DiscordMessageHandler {
 
   private void sendBasicUsageEmbed(InteractionOriginalResponseUpdater responder) {
     EmbedBuilder basicUsageEmbed = new EmbedBuilder();
-    basicUsageEmbed.setDescription("`/<command>`\n\nSee `/help` for more information");
+    basicUsageEmbed.setDescription("`/<command>`\n\nSee " + DiscordUtils.findClickableCommand("help") + " for more information");
     DiscordUtils.respondWithEmbed(responder, basicUsageEmbed);
   }
 

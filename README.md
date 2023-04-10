@@ -31,7 +31,7 @@ This continues until every song of the given playlist or album has been played. 
 ## Commands
 Here's a full list of every command and what it does:
 
-### `/nowplaying` or `/np`
+### `/np` ("now playing")
 Print info of the currently ongoing Listening Party for this channel. Useful for late joiners, because it also displays the timestamp of the current song:
 
 ![/nowplaying](https://i.imgur.com/LIlXCop.png)
@@ -48,7 +48,7 @@ A combination of `/set` and `/start` to instantly start a Listening Party withou
 ### `/stop`
 Cancel a current Listening Party and reset it to the beginning
 
-### `/next <amount>` or `/skip <amount>`
+### `/skip <amount>`
 Skip the current song in the Listening Party (_amount_: how many songs to skip, default: 1)
 
 ### `/previous <amount>`

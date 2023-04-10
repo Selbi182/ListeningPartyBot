@@ -63,7 +63,7 @@ public class ChannelRegistry {
         StandardListeningParty simpleListeningParty = new StandardListeningParty(channel, trackListWrapper, lastFmService, finalMessages);
         lpInstancesForChannelId.put(channel.getId(), simpleListeningParty);
         if (printHint) {
-          DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type `/start` to begin the session.");
+          DiscordUtils.updateWithSimpleEmbed(responder, "Listening Party link set! Type " + DiscordUtils.findClickableCommand("start") + " to begin the session.");
           DiscordUtils.sendSimpleMessage(channel, "**Link:** " + trackListWrapper.getLink());
         }
         LpUtils.logLpEvent(channel, logger, "New LP set up");
@@ -72,7 +72,7 @@ public class ChannelRegistry {
         DiscordUtils.updateWithErrorEmbed(responder, e.getMessage());
       }
     } else {
-      DiscordUtils.updateWithErrorEmbed(responder, "A Listening Party is currently in progress for this channel. `/stop` it first!");
+      DiscordUtils.updateWithErrorEmbed(responder, "A Listening Party is currently in progress for this channel. " + DiscordUtils.findClickableCommand("stop") + " it first!");
     }
     return null;
   }
@@ -85,7 +85,7 @@ public class ChannelRegistry {
         TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService, finalMessages);
         lpInstancesForChannelId.put(channel.getId(), totwParty);
         String participants = String.join(", ", parsedTotwData.getParticipants());
-        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use `/start` to begin the session."
+        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use " + DiscordUtils.findClickableCommand("start") + " to begin the listening party."
           + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
         DiscordUtils.sendSimpleMessage(channel, "**Link:** " + totwTrackListWrapper.getLink());
         LpUtils.logLpEvent(channel, logger, "New TOTW LP set up");
@@ -99,6 +99,6 @@ public class ChannelRegistry {
   }
 
   private void sendGenericUnsetError(InteractionOriginalResponseUpdater responder) {
-    DiscordUtils.updateWithErrorEmbed(responder, "There is currently no Listening Party set for this channel!\n\nUse `/set <link>` to set it");
+    DiscordUtils.updateWithErrorEmbed(responder, "There is currently no Listening Party set for this channel!\n\nUse " + DiscordUtils.findClickableCommand("set") + " to set it");
   }
 }

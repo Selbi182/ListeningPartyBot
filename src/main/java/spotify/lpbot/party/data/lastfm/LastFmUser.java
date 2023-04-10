@@ -1,7 +1,6 @@
 package spotify.lpbot.party.data.lastfm;
 
 import java.util.List;
-import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

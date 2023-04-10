@@ -1,13 +1,16 @@
 package spotify.lpbot.discord;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.activity.ActivityType;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.user.UserStatus;
+import org.javacord.api.interaction.ApplicationCommand;
 import org.javacord.api.interaction.SlashCommandBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +40,7 @@ public class DiscordBot {
   }
 
   @EventListener(SpotifyApiLoggedInEvent.class)
-  public void login() {
+  public DiscordApi getDiscordApi() {
     LOGGER.info("Successfully logged into Spotify!");
     try {
       LOGGER.info("Connecting ListeningPartyBot to Discord...");
@@ -49,24 +52,30 @@ public class DiscordBot {
         .login()
         .join();
 
-      // We don't need to cache anything, as slash commands are processed immediately
-//      this.api.setMessageCacheSize(0, 0); // TODO fix console spam
-
       // Set to online and set status
       refreshStatus();
 
       // Set up slash commands
       api.addSlashCommandCreateListener(discordMessageHandler::processSlashCommand);
       Set<SlashCommandBuilder> slashCommands = DiscordSlashCommands.getSlashCommands();
-      api.bulkOverwriteGlobalApplicationCommands(slashCommands).join();
+      Set<ApplicationCommand> registeredCommands = api.bulkOverwriteGlobalApplicationCommands(slashCommands).join();
+
+      Map<String, Long> commandIdsMap = registeredCommands.stream()
+        .collect(Collectors.toMap(ApplicationCommand::getName, ApplicationCommand::getId));
+      for (DiscordSlashCommands.LPBotCommand lpBotCommand : DiscordSlashCommands.getLpBotCommands()) {
+        lpBotCommand.setId(commandIdsMap.get(lpBotCommand.getCommand()));
+      }
 
       // Done
       LOGGER.info("Successfully connected ListeningPartyBot to Discord!");
       LOGGER.info("Servers: " + api.getServers().size());
+
+      return api;
     } catch (Exception e) {
       LOGGER.error("Failed to start bot! (Couldn't read Discord API token.) Terminating...");
       e.printStackTrace();
       System.exit(1);
+      throw new IllegalStateException();
     }
   }
 

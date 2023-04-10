@@ -10,6 +10,8 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
+import spotify.lpbot.discord.DiscordSlashCommands;
+
 public class DiscordUtils {
   private DiscordUtils() {
   }
@@ -22,7 +24,33 @@ public class DiscordUtils {
   /**
    * The URL homepage for the bot (with https:// prefix)
    */
-  public static final String LPBOT_URL_HTTPS = "https:// " + LPBOT_URL;
+  public static final String LPBOT_URL_HTTPS = "https://" + LPBOT_URL;
+
+
+  ////////////////
+  // Command formatting
+
+  /**
+   * Return the given command name and ID in the format required for a clickable command.
+   * If the ID is null, a simple code-string will be returned.
+   */
+  public static String asClickableCommand(String commandName, Long commandId) {
+    if (commandId != null) {
+      return String.format("</%s:%d>", commandName, commandId);
+    }
+    return String.format("`/%s`", commandName);
+  }
+
+  /**
+   * Find and return the given command name as clickable command.
+   */
+  public static String findClickableCommand(String commandName) {
+    return DiscordSlashCommands.getLpBotCommands().stream()
+      .filter(command -> command.getCommand().equals(commandName))
+      .findFirst()
+      .map(command -> asClickableCommand(commandName,command.getId()))
+      .orElse(asClickableCommand(commandName, null));
+  }
 
   ////////////////
   // Builders
