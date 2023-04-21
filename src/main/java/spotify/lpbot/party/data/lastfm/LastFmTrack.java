@@ -86,4 +86,9 @@ public class LastFmTrack {
   public boolean hasUserScrobbles() {
     return userScrobbleCount != null && userScrobbleCount > 0;
   }
+
+  @JsonIgnore
+  public String getWikiUrl() {
+    return getUrl() + "/+wiki";
+  }
 }

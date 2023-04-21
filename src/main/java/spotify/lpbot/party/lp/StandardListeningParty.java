@@ -46,8 +46,15 @@ public class StandardListeningParty extends AbstractListeningParty {
     LastFmTrack lastFmTrack = lastFmService.getLastFmTrackInfo(track);
     if (lastFmTrack != null && lastFmTrack.hasWiki()) {
       LastFmWikiEntry wiki = lastFmTrack.getWiki();
-      String wikiText = wiki.getSummary().split("<a href")[0];
-      String description = DiscordUtils.formatDescription(String.format("From [last.fm](%s) (%s)", lastFmTrack.getUrl(), wiki.getFormattedPublishDate()), wikiText);
+      String wikiTextWithoutLink = wiki.getContent().split("<a href")[0];
+
+      String readMoreLink = String.format("\n\n[Read more on last.fm...](%s)", lastFmTrack.getWikiUrl());
+      String wikiTextTruncated = DiscordUtils.truncateToMaxDescription(wikiTextWithoutLink, readMoreLink.length());
+      if (wikiTextTruncated.length() < wikiTextWithoutLink.length()) {
+        wikiTextTruncated += readMoreLink;
+      }
+
+      String description = DiscordUtils.formatDescription(String.format("From last.fm's wiki (%s)", wiki.getFormattedPublishDate()), wikiTextTruncated);
       embed.setDescription(description);
     }
 

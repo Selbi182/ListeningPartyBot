@@ -26,6 +26,11 @@ public class DiscordUtils {
    */
   public static final String LPBOT_URL_HTTPS = "https://" + LPBOT_URL;
 
+  /**
+   * The max length of a description in a Discord embed
+   */
+  private static final int DESCRIPTION_EMBED_MAX_LENGTH = 2048;
+
 
   ////////////////
   // Command formatting
@@ -50,6 +55,26 @@ public class DiscordUtils {
       .findFirst()
       .map(command -> asClickableCommand(commandName,command.getId()))
       .orElse(asClickableCommand(commandName, null));
+  }
+
+  /**
+   * Truncate the given text to the max limit of Discord embeds, should it exceed it (2048).
+   * If truncated, ... will be added.
+   *
+   * @param str the input string
+   * @param buffer an additional buffer on top of the max limit to specify
+   * @return the (potentially) truncated string
+   */
+  public static String truncateToMaxDescription(String str, int buffer) {
+    int limit = DESCRIPTION_EMBED_MAX_LENGTH - buffer;
+    if (str.length() <= limit) {
+      return str;
+    }
+    int lastSpace = str.lastIndexOf(" ", limit - 4);
+    if (lastSpace != -1) {
+      return str.substring(0, lastSpace).strip() + "\u2026";
+    }
+    return str.substring(0, limit - 3).strip() + "\u2026";
   }
 
   ////////////////

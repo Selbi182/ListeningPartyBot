@@ -152,8 +152,10 @@ public abstract class AbstractListeningParty {
   public void restart(InteractionOriginalResponseUpdater responder) {
     if (isState(State.ONGOING)) {
       nextFuture.cancel(true);
-      prepareNextSong(getCurrentTrack());
-      nowPlaying(responder);
+      Track currentTrack = getCurrentTrack();
+      prepareNextSong(currentTrack);
+      EmbedBuilder embed = createDiscordEmbedForTrack(currentTrack);
+      DiscordUtils.respondWithEmbed(responder, embed);
     } else if (isState(State.PAUSED)) {
       remainingTimeAtTimeOfPause = null;
       DiscordUtils.updateWithSimpleEmbed(responder, "Song restarted! (Note: Listening Party is still paused. Use " + DiscordUtils.findClickableCommand("start") + " to resume)");
