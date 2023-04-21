@@ -52,9 +52,18 @@ public class TrackListCreationService {
         String id = splitPath[2];
         switch (releaseType) {
           case "album":
-            return createAlbumTracklist(id);
+            Album album = SpotifyCall.execute(spotifyApi.getAlbum(id));
+            return createAlbumTracklist(album);
           case "playlist":
-            return createPlaylistTracklist(id);
+            Playlist playlist = SpotifyCall.execute(spotifyApi.getPlaylist(id));
+            return createPlaylistTracklist(playlist);
+          case "track":
+            Track track = SpotifyCall.execute(spotifyApi.getTrack(id));
+            Album potentialOneTrackAlbum = SpotifyCall.execute(spotifyApi.getAlbum(track.getAlbum().getId()));
+            if (potentialOneTrackAlbum.getTracks().getTotal() == 1) {
+              return createAlbumTracklist(potentialOneTrackAlbum);
+            }
+            // fallthrough if not a one-track album
           default:
             throw new IllegalArgumentException(String.format("Release type `%s` is not supported (must be `album` or `playlist`)", releaseType));
         }
@@ -65,9 +74,8 @@ public class TrackListCreationService {
     throw new IllegalArgumentException("Failed to parse Spotify URL");
   }
 
-  private TrackListWrapper createAlbumTracklist(String albumId) {
+  private TrackListWrapper createAlbumTracklist(Album album) {
     try {
-      Album album = SpotifyCall.execute(spotifyApi.getAlbum(albumId));
       verifyBelowTrackCountLimit(album.getTracks().getTotal());
       List<TrackSimplified> albumTracks = SpotifyCall.executePaging(spotifyApi.getAlbumsTracks(album.getId()));
       List<Track> allAlbumTracks = new ArrayList<>();
@@ -84,9 +92,8 @@ public class TrackListCreationService {
     }
   }
 
-  private TrackListWrapper createPlaylistTracklist(String id) {
+  private TrackListWrapper createPlaylistTracklist(Playlist playlist) {
     try {
-      Playlist playlist = SpotifyCall.execute(spotifyApi.getPlaylist(id));
       verifyBelowTrackCountLimit(playlist.getTracks().getTotal());
       List<Track> allPlaylistTracks = SpotifyCall.executePaging(spotifyApi.getPlaylistsItems(playlist.getId()))
         .stream()
