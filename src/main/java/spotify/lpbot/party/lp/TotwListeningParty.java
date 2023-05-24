@@ -41,9 +41,13 @@ public class TotwListeningParty extends AbstractListeningParty{
     try {
       String lastFmName = currentTotwEntry.getLastFmName();
       LastFmUser lastFmUserInfo = lastFmService.getLastFmUserInfo(lastFmName);
+      if (lastFmUserInfo != null) {
+        currentTotwEntry.attachUserInfo(lastFmUserInfo);
+      }
       LastFmTrack lastFmTrack = lastFmService.getLastFmTrackInfo(track, lastFmName);
-      currentTotwEntry.attachUserInfo(lastFmUserInfo);
-      currentTotwEntry.attachTrackInfo(lastFmTrack);
+      if (lastFmTrack != null) {
+        currentTotwEntry.attachTrackInfo(lastFmTrack);
+      }
     } catch (RuntimeException e) {
       e.printStackTrace();
     }
