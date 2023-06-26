@@ -25,7 +25,9 @@ public class DiscordSlashCommands {
     LPBotCommand.of("link", "Print the set target link"),
     LPBotCommand.of("help", "Print a basic tutorial of how the bot works"),
     LPBotCommand.of("commands", "Print all commands as a chat message"),
-    LPBotCommand.of("custom", "[Experimental] Host a party custom-defined by the given attachment", SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the custom data", true))
+    LPBotCommand.of("custom", "[Experimental] Host a party custom-defined by the given attachment",
+      SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the custom data", true),
+      SlashCommandOption.createBooleanOption("guessing-game", "Enable a 30s guessing game before each track", false))
   );
 
   public static List<LPBotCommand> getLpBotCommands() {
@@ -36,7 +38,10 @@ public class DiscordSlashCommands {
     Set<SlashCommandBuilder> builder = new HashSet<>();
     for (LPBotCommand command : DISCORD_SLASH_COMMANDS) {
       builder.add(command.getSubCommand()
-        .map(subCommand -> SlashCommand.with(command.getCommand(), command.getDescription(), List.of(subCommand)))
+        .map(subCommand -> {
+          Optional<SlashCommandOption> subCommand2 = command.getSubCommand2();
+          return SlashCommand.with(command.getCommand(), command.getDescription(), subCommand2.map(slashCommandOption -> List.of(subCommand, slashCommandOption)).orElseGet(() -> List.of(subCommand)));
+        })
         .orElse(SlashCommand.with(command.getCommand(), command.getDescription())));
     }
     return Set.copyOf(builder);
@@ -46,21 +51,27 @@ public class DiscordSlashCommands {
     private final String command;
     private final String description;
     private final SlashCommandOption subCommand;
+    private final SlashCommandOption subCommand2;
 
     private Long id;
 
-    LPBotCommand(String command, String description, SlashCommandOption subCommand) {
+    LPBotCommand(String command, String description, SlashCommandOption subCommand, SlashCommandOption subCommand2) {
       this.command = command;
       this.description = description;
       this.subCommand = subCommand;
+      this.subCommand2 = subCommand2;
     }
 
     private static LPBotCommand of(String command, String description) {
-      return new LPBotCommand(command, description, null);
+      return new LPBotCommand(command, description, null, null);
     }
 
     private static LPBotCommand of(String command, String description, SlashCommandOption subCommand) {
-      return new LPBotCommand(command, description, subCommand);
+      return new LPBotCommand(command, description, subCommand, null);
+    }
+
+    private static LPBotCommand of(String command, String description, SlashCommandOption subCommand, SlashCommandOption subCommand2) {
+      return new LPBotCommand(command, description, subCommand, subCommand2);
     }
 
     public String getCommand() {
@@ -73,6 +84,10 @@ public class DiscordSlashCommands {
 
     public Optional<SlashCommandOption> getSubCommand() {
       return Optional.ofNullable(subCommand);
+    }
+
+    public Optional<SlashCommandOption> getSubCommand2() {
+      return Optional.ofNullable(subCommand2);
     }
 
     public String getFullDescription() {

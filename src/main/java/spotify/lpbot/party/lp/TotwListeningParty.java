@@ -25,11 +25,13 @@ import spotify.util.SpotifyUtils;
 public class TotwListeningParty extends AbstractListeningParty {
   private final TotwTrackListWrapper totwTrackListWrapper;
   private final LastFmService lastFmService;
+  private final boolean guessingGame;
 
-  public TotwListeningParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper, LastFmService lastFmService, FinalMessages finalMessages) {
+  public TotwListeningParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper, LastFmService lastFmService, FinalMessages finalMessages, boolean guessingGame) {
     super(channel, totwTrackListWrapper, finalMessages);
     this.totwTrackListWrapper = totwTrackListWrapper;
     this.lastFmService = lastFmService;
+    this.guessingGame = guessingGame;
   }
 
   private TotwData.Entry getCurrentTotwEntry() {
@@ -38,6 +40,9 @@ public class TotwListeningParty extends AbstractListeningParty {
 
   @Override
   protected EmbedBuilder createDiscordEmbedForTrack(Track track) {
+    if (!guessingGame) {
+      return fullTotwEmbed(track);
+    }
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
 
@@ -88,6 +93,10 @@ public class TotwListeningParty extends AbstractListeningParty {
 
   @Override
   protected void sendEmbed(EmbedBuilder discordEmbedForTrack) {
+    if (!guessingGame) {
+      super.sendEmbed(discordEmbedForTrack);
+      return;
+    }
     Message guessingGameMessage = getChannel().sendMessage(discordEmbedForTrack).join();
     guessingGameMessage.addReactions("\uD83C\uDDE6", "\uD83C\uDDE7", "\uD83C\uDDE8", "\uD83C\uDDE9");
   }

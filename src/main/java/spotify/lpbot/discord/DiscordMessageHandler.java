@@ -90,7 +90,10 @@ public class DiscordMessageHandler {
                 break;
               case "custom":
                 slashCommandInteraction.getArgumentAttachmentValueByName("attachment")
-                  .ifPresent(attachment -> lpChannelRegistry.registerTotw(channel, responder, attachment));
+                  .ifPresent(attachment -> {
+                    boolean guessingGame = slashCommandInteraction.getArgumentBooleanValueByName("guessing-game").orElse(false);
+                    lpChannelRegistry.registerTotw(channel, responder, attachment, guessingGame);
+                  });
                 break;
               case "help":
                 sendTutorialEmbed(responder);

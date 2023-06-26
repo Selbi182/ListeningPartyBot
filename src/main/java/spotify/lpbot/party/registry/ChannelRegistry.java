@@ -77,12 +77,12 @@ public class ChannelRegistry {
     return null;
   }
 
-  public void registerTotw(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment totwData) {
+  public void registerTotw(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment totwData, boolean guessingGame) {
     if (!isRegistered(channel) || lpInstancesForChannelId.get(channel.getId()).isReplaceable()) {
       try {
         TotwData parsedTotwData = totwPlaylistService.parseAttachmentFile(totwData);
         TotwTrackListWrapper totwTrackListWrapper = totwPlaylistService.findOrCreateTotwPlaylist(parsedTotwData);
-        TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService, finalMessages);
+        TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService, finalMessages, guessingGame);
         lpInstancesForChannelId.put(channel.getId(), totwParty);
         String participants = String.join(", ", parsedTotwData.getParticipants());
         DiscordUtils.updateWithSimpleEmbed(responder, "Custom party is set! Use " + DiscordUtils.findClickableCommand("start") + " to begin the listening party."
