@@ -88,7 +88,7 @@ public class DiscordMessageHandler {
               case "link":
                 lpChannelRegistry.getExistingLPInstance(channel, responder).ifPresent(lp -> lp.link(responder));
                 break;
-              case "totw":
+              case "custom":
                 slashCommandInteraction.getArgumentAttachmentValueByName("attachment")
                   .ifPresent(attachment -> lpChannelRegistry.registerTotw(channel, responder, attachment));
                 break;

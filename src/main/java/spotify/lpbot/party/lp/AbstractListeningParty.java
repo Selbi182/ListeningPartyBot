@@ -210,12 +210,16 @@ public abstract class AbstractListeningParty {
 
   ////////////////////
 
+  protected void sendEmbed(EmbedBuilder discordEmbedForTrack) {
+    channel.sendMessage(discordEmbedForTrack);
+  }
+
   private void printNextSong() {
     if (getCurrentTrackListIndex() < getTotalTrackCount()) {
       // Send info about current song to channel
       Track currentTrack = getCurrentTrack();
       EmbedBuilder discordEmbedForTrack = createDiscordEmbedForTrack(currentTrack);
-      channel.sendMessage(discordEmbedForTrack);
+      sendEmbed(discordEmbedForTrack);
 
       // Prepare the next song
       prepareNextSong(currentTrack);
@@ -226,7 +230,7 @@ public abstract class AbstractListeningParty {
   }
 
   private void prepareNextSong(Track currentTrack) {
-    this.nextFuture = scheduledExecutorService.schedule(() -> {
+    this.nextFuture = getScheduledExecutorService().schedule(() -> {
       currentTrackListIndex++;
       printNextSong();
     }, currentTrack.getDurationMs(), TimeUnit.MILLISECONDS);
@@ -250,7 +254,7 @@ public abstract class AbstractListeningParty {
   private void createAndStartCountdown(InteractionOriginalResponseUpdater responder, EmbedBuilder countdownEmbed, int countdown, boolean resume) {
     Message message = DiscordUtils.respondWithEmbed(responder, countdownEmbed).join();
     AtomicInteger atomicCountdown = new AtomicInteger(countdown);
-    this.nextFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+    this.nextFuture = getScheduledExecutorService().scheduleAtFixedRate(() -> {
       int i = atomicCountdown.getAndDecrement();
       StringBuilder description = new StringBuilder();
       for (int j = countdown; j >= i; j--) {
@@ -268,10 +272,10 @@ public abstract class AbstractListeningParty {
           } else {
             delayAfterPause = remainingTimeAtTimeOfPause;
           }
-          this.nextFuture = scheduledExecutorService.schedule(this::printNextSong, delayAfterPause, TimeUnit.MILLISECONDS);
+          this.nextFuture = getScheduledExecutorService().schedule(this::printNextSong, delayAfterPause, TimeUnit.MILLISECONDS);
           nowPlaying(responder);
         } else {
-          scheduledExecutorService.execute(this::printNextSong);
+          getScheduledExecutorService().execute(this::printNextSong);
         }
       }
     }, COUNTDOWN_INTERVAL_MS, COUNTDOWN_INTERVAL_MS, TimeUnit.MILLISECONDS);
@@ -349,6 +353,10 @@ public abstract class AbstractListeningParty {
 
   protected TextChannel getChannel() {
     return channel;
+  }
+
+  protected ScheduledExecutorService getScheduledExecutorService() {
+    return scheduledExecutorService;
   }
 
   ////////////////////

@@ -2,9 +2,14 @@ package spotify.lpbot.party.lp;
 
 import java.awt.Color;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import se.michaelthelin.spotify.model_objects.specification.Track;
@@ -17,7 +22,7 @@ import spotify.lpbot.party.lp.misc.FinalMessages;
 import spotify.lpbot.party.service.LastFmService;
 import spotify.util.SpotifyUtils;
 
-public class TotwListeningParty extends AbstractListeningParty{
+public class TotwListeningParty extends AbstractListeningParty {
   private final TotwTrackListWrapper totwTrackListWrapper;
   private final LastFmService lastFmService;
 
@@ -33,6 +38,61 @@ public class TotwListeningParty extends AbstractListeningParty{
 
   @Override
   protected EmbedBuilder createDiscordEmbedForTrack(Track track) {
+    // Prepare a new Discord embed
+    EmbedBuilder embed = new EmbedBuilder();
+
+    // [Artist] - [Title] ([song:length])
+    // -> Link to last.fm page
+    String songArtists = SpotifyUtils.joinArtists(track.getArtists());
+    String songTitle = track.getName();
+    embed.setTitle(String.format("%s \u2013 %s", songArtists, songTitle));
+
+    // Description
+    TotwData.Entry currentTotwEntry = getCurrentTotwEntry();
+    String realSubber = currentTotwEntry.getName();
+
+    List<String> participants = new ArrayList<>(totwTrackListWrapper.getTotwData().getParticipants());
+    participants.remove(realSubber);
+    Collections.shuffle(participants);
+
+    List<String> subberOptions = new ArrayList<>(participants.subList(0, 3));
+    subberOptions.add(0, realSubber);
+    Collections.shuffle(subberOptions);
+
+    String abcd = String.format("Who subbed this song? \uD83E\uDD14"
+        + "\n\n"
+        + "> **A** \u2013 %s\n"
+        + "> **B** \u2013 %s\n"
+        + "> **C** \u2013 %s\n"
+        + "> **D** \u2013 %s",
+      subberOptions.get(0), subberOptions.get(1), subberOptions.get(2), subberOptions.get(3));
+    embed.setDescription(abcd);
+
+    // Thumbnail cover art
+    String imageUrl = SpotifyUtils.findLargestImage(track.getAlbum().getImages());
+    Color embedColor = getColorForCurrentTrack();
+    embed.setThumbnail(imageUrl);
+    embed.setColor(embedColor);
+
+    // Footer
+    embed.setFooter("Answer gets revealed in 30 seconds...");
+
+    // Send full embed in 30 seconds
+    getScheduledExecutorService().schedule(() -> {
+      getChannel().sendMessage(fullTotwEmbed(track));
+    }, 30, TimeUnit.SECONDS);
+
+    // Send off the embed to the Discord channel
+    return embed;
+  }
+
+  @Override
+  protected void sendEmbed(EmbedBuilder discordEmbedForTrack) {
+    Message guessingGameMessage = getChannel().sendMessage(discordEmbedForTrack).join();
+    guessingGameMessage.addReactions("\uD83C\uDDE6", "\uD83C\uDDE7", "\uD83C\uDDE8", "\uD83C\uDDE9");
+  }
+
+  protected EmbedBuilder fullTotwEmbed(Track track) {
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
     TotwData.Entry currentTotwEntry = getCurrentTotwEntry();

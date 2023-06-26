@@ -85,13 +85,13 @@ public class ChannelRegistry {
         TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService, finalMessages);
         lpInstancesForChannelId.put(channel.getId(), totwParty);
         String participants = String.join(", ", parsedTotwData.getParticipants());
-        DiscordUtils.updateWithSimpleEmbed(responder, "TOTW party is set! Use " + DiscordUtils.findClickableCommand("start") + " to begin the listening party."
+        DiscordUtils.updateWithSimpleEmbed(responder, "Custom party is set! Use " + DiscordUtils.findClickableCommand("start") + " to begin the listening party."
           + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
         DiscordUtils.sendSimpleMessage(channel, "**Link:** " + totwTrackListWrapper.getLink());
-        LpUtils.logLpEvent(channel, logger, "New TOTW LP set up");
+        LpUtils.logLpEvent(channel, logger, "New custom LP set up");
       } catch (IOException e) {
         e.printStackTrace();
-        DiscordUtils.updateWithErrorEmbed(responder, "Couldn't parse TOTW data or failed to create/refresh TOTW playlist. Likely caused by an unknown last.fm username or malformed JSON");
+        DiscordUtils.updateWithErrorEmbed(responder, "Couldn't parse custom data or failed to create/refresh target playlist. Likely caused by an unknown last.fm username or malformed JSON");
       }
     } else {
       DiscordUtils.updateWithErrorEmbed(responder, "A Listening Party is currently in progress for this channel");

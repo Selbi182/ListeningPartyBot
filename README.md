@@ -69,8 +69,8 @@ Print a basic tutorial of how the bot works
 ### `/commands`
 Print all commands as a chat message
 
-### `/totw <attachment>`
-_[Experimental]_ Host a Track-of-the-Week party (_attachment_: the TOTW info data). **This feature is highly experimental and therefore shouldn't be used unless you know what you're doing!**
+### `/custom <attachment>`
+_[Experimental]_ Host a party custom-defined by the given attachment. **This feature is highly experimental and therefore shouldn't be used unless you know what you're doing!**
 
 ## Support
 If you got any problems, [write an issue ticket on GitHub](https://github.com/Selbi182/ListeningPartyBot/issues) and I will gladly take a look at it :)

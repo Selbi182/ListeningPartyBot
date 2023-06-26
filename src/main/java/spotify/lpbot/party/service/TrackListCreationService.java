@@ -48,8 +48,8 @@ public class TrackListCreationService {
       String path = uri.getPath();
       String[] splitPath = path.split("/");
       if (splitPath.length >= 2) {
-        String releaseType = splitPath[1].toLowerCase();
-        String id = splitPath[2];
+        String id = splitPath[splitPath.length - 1];
+        String releaseType = splitPath[splitPath.length - 2].toLowerCase();
         switch (releaseType) {
           case "album":
             Album album = SpotifyCall.execute(spotifyApi.getAlbum(id));

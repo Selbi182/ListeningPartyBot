@@ -25,7 +25,7 @@ public class DiscordSlashCommands {
     LPBotCommand.of("link", "Print the set target link"),
     LPBotCommand.of("help", "Print a basic tutorial of how the bot works"),
     LPBotCommand.of("commands", "Print all commands as a chat message"),
-    LPBotCommand.of("totw", "[Experimental] Host a Track-of-the-Week party", SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the TOTW info data", true))
+    LPBotCommand.of("custom", "[Experimental] Host a party custom-defined by the given attachment", SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the custom data", true))
   );
 
   public static List<LPBotCommand> getLpBotCommands() {
