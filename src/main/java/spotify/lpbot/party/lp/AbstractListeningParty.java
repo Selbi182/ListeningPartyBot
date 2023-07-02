@@ -252,7 +252,7 @@ public abstract class AbstractListeningParty {
   }
 
   private void createAndStartCountdown(InteractionOriginalResponseUpdater responder, EmbedBuilder countdownEmbed, int countdown, boolean resume) {
-    Message message = DiscordUtils.respondWithEmbed(responder, countdownEmbed).join();
+    Message message = DiscordUtils.respondWithEmbed(responder, countdownEmbed);
     AtomicInteger atomicCountdown = new AtomicInteger(countdown);
     this.nextFuture = getScheduledExecutorService().scheduleAtFixedRate(() -> {
       int i = atomicCountdown.getAndDecrement();

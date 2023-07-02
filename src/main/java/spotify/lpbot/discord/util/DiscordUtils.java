@@ -2,7 +2,6 @@ package spotify.lpbot.discord.util;
 
 import java.awt.Color;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.javacord.api.entity.channel.TextChannel;
@@ -125,13 +124,6 @@ public class DiscordUtils {
     textChannel.sendMessage(content);
   }
 
-  /**
-   * Create and send a simple embed to the given channel
-   */
-  public static void sendSimpleEmbed(TextChannel textChannel, String content) {
-    textChannel.sendMessage(createSimpleEmbed(content));
-  }
-
   ////////////////
   // Update Embed
 
@@ -149,30 +141,24 @@ public class DiscordUtils {
     respondWithEmbed(responder, createErrorEmbed(content));
   }
 
-  /**
-   * Respond to the given InteractionOriginalResponseUpdater with an embed that also has content
-   */
-  public static void updateWithContentEmbed(InteractionOriginalResponseUpdater responder, String embedContent, String mainContent) {
-    responder.setContent(mainContent).addEmbed(createSimpleEmbed(embedContent)).update();
-  }
-
   ////////////////
   // Response
 
   /**
    * Respond to the given InteractionOriginalResponseUpdater with a simple message
-   * @return the updated message in case further stuff needs to be done with it
+   *
    */
-  public static CompletableFuture<Message> respondWithMessage(InteractionOriginalResponseUpdater responder, String message) {
-    return responder.setContent(message).update();
+  public static Message respondWithMessage(InteractionOriginalResponseUpdater responder, String message) {
+    return responder.setContent(message).update().join();
   }
 
   /**
    * Respond with a custom embed
+   *
    * @return the updated message in case further stuff needs to be done with it
    */
-  public static CompletableFuture<Message> respondWithEmbed(InteractionOriginalResponseUpdater responder, EmbedBuilder embed) {
-    return responder.addEmbed(embed).update();
+  public static Message respondWithEmbed(InteractionOriginalResponseUpdater responder, EmbedBuilder embed) {
+    return responder.addEmbed(embed).update().join();
   }
 
   ////////////////

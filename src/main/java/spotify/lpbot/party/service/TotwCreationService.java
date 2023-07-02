@@ -75,7 +75,7 @@ public class TotwCreationService {
     // If it doesn't exist, create it. If it does, clear it
     Playlist playlist;
     if (previousTotwPlaylist.isEmpty()) {
-      playlist = playlistService.createPlaylist(totwData.getHeadline());
+      playlist = playlistService.createPlaylist(totwData.getHeadline(), null, true);
     } else {
       playlist = playlistService.upgradePlaylistSimplified(previousTotwPlaylist.get());
       playlistService.clearPlaylist(playlist);

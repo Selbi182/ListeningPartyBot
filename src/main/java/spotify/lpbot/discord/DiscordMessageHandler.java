@@ -39,6 +39,7 @@ public class DiscordMessageHandler {
               case "set":
                 slashCommandInteraction.getOptionByName("url")
                   .map(SlashCommandInteractionOption::getStringValue)
+                  .filter(Optional::isPresent)
                   .map(Optional::get)
                   .ifPresent(url -> lpChannelRegistry.register(channel, responder, url, true));
                 break;
@@ -53,6 +54,7 @@ public class DiscordMessageHandler {
               case "quickstart":
                 slashCommandInteraction.getOptionByName("url")
                   .map(SlashCommandInteractionOption::getStringValue)
+                  .filter(Optional::isPresent)
                   .map(Optional::get)
                   .map(url -> lpChannelRegistry.register(channel, responder, url, false))
                   .ifPresent(lp -> lp.start(responder, 0));
@@ -92,7 +94,8 @@ public class DiscordMessageHandler {
                 slashCommandInteraction.getArgumentAttachmentValueByName("attachment")
                   .ifPresent(attachment -> {
                     boolean guessingGame = slashCommandInteraction.getArgumentBooleanValueByName("guessing-game").orElse(false);
-                    lpChannelRegistry.registerTotw(channel, responder, attachment, guessingGame);
+                    boolean shuffle = slashCommandInteraction.getArgumentBooleanValueByName("shuffle").orElse(false);
+                    lpChannelRegistry.registerTotw(channel, responder, attachment, guessingGame, shuffle);
                   });
                 break;
               case "help":
@@ -150,6 +153,7 @@ public class DiscordMessageHandler {
   public static Optional<Integer> getCountdownSeconds(Optional<SlashCommandInteractionOption> customCountdownSeconds) {
     long countdown = Math.toIntExact(customCountdownSeconds
       .map(SlashCommandInteractionOption::getLongValue)
+      .filter(Optional::isPresent)
       .map(Optional::get)
       .map(l -> Math.min(l, Integer.MAX_VALUE))
       .orElse(DEFAULT_COUNTDOWN_SECONDS));
@@ -164,6 +168,7 @@ public class DiscordMessageHandler {
   private Optional<Integer> getSkipAmount(Optional<SlashCommandInteractionOption> optionalSkipAmount) {
     long skipAmount = Math.toIntExact(optionalSkipAmount
       .map(SlashCommandInteractionOption::getLongValue)
+      .filter(Optional::isPresent)
       .map(Optional::get)
       .map(l -> Math.min(l, Integer.MAX_VALUE))
       .orElse(DEFAULT_SKIP_AMOUNT));

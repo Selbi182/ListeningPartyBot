@@ -3,6 +3,7 @@ package spotify.lpbot.party.registry;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -77,17 +78,36 @@ public class ChannelRegistry {
     return null;
   }
 
-  public void registerTotw(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment totwData, boolean guessingGame) {
+  public void registerTotw(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment totwData, boolean guessingGame, boolean shuffle) {
     if (!isRegistered(channel) || lpInstancesForChannelId.get(channel.getId()).isReplaceable()) {
       try {
         TotwData parsedTotwData = totwPlaylistService.parseAttachmentFile(totwData);
+        if (shuffle) {
+          parsedTotwData.shuffle();
+        }
         TotwTrackListWrapper totwTrackListWrapper = totwPlaylistService.findOrCreateTotwPlaylist(parsedTotwData);
         TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService, finalMessages, guessingGame);
         lpInstancesForChannelId.put(channel.getId(), totwParty);
+
         String participants = String.join(", ", parsedTotwData.getParticipants());
-        DiscordUtils.updateWithSimpleEmbed(responder, "Custom party is set! Use " + DiscordUtils.findClickableCommand("start") + " to begin the listening party."
-          + "\n\n**Participants (click to reveal names):**\n||" + participants + "||");
+        String customLpInfoEmbed = "Custom party is set! Use " + DiscordUtils.findClickableCommand("start") + " to begin the listening party."
+          + "\n\n**Participants (click to reveal names):**\n||" + participants + "||";
+
+        StringJoiner optionsText = new StringJoiner(", ");
+        if (shuffle) {
+          optionsText.add("Shuffle");
+        }
+        if (guessingGame) {
+          optionsText.add("Guessing Game");
+        }
+        if (!optionsText.toString().isBlank()) {
+          customLpInfoEmbed += "\n\n**Options:** " + optionsText;
+        }
+
+        DiscordUtils.updateWithSimpleEmbed(responder, customLpInfoEmbed);
+
         DiscordUtils.sendSimpleMessage(channel, "**Link:** " + totwTrackListWrapper.getLink());
+
         LpUtils.logLpEvent(channel, logger, "New custom LP set up");
       } catch (IOException e) {
         e.printStackTrace();

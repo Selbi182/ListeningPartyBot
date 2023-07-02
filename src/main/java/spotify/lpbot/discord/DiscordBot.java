@@ -60,6 +60,7 @@ public class DiscordBot {
       Set<SlashCommandBuilder> slashCommands = DiscordSlashCommands.getSlashCommands();
       Set<ApplicationCommand> registeredCommands = api.bulkOverwriteGlobalApplicationCommands(slashCommands).join();
 
+      // Get slash command IDs (required to make them clickable in the help dialog)
       Map<String, Long> commandIdsMap = registeredCommands.stream()
         .collect(Collectors.toMap(ApplicationCommand::getName, ApplicationCommand::getId));
       for (DiscordSlashCommands.LPBotCommand lpBotCommand : DiscordSlashCommands.getLpBotCommands()) {

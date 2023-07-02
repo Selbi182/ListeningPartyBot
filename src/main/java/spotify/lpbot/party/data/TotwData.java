@@ -1,5 +1,6 @@
 package spotify.lpbot.party.data;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,10 @@ public class TotwData {
 
   public List<TotwData.Entry> getTotwEntries() {
     return totwEntries;
+  }
+
+  public void shuffle() {
+    Collections.shuffle(totwEntries);
   }
 
   public static class Entry {

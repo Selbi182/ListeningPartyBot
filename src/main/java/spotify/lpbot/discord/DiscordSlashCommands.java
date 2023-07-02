@@ -2,23 +2,22 @@ package spotify.lpbot.discord;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandBuilder;
 import org.javacord.api.interaction.SlashCommandOption;
-import org.javacord.api.interaction.SlashCommandOptionType;
 
 public class DiscordSlashCommands {
   // NTS: ` doesn't work for slash command descriptions
   private final static List<LPBotCommand> DISCORD_SLASH_COMMANDS = List.of(
-    LPBotCommand.of("set", "Set the target link", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
-    LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "countdown", "the seconds to count down, default: 5", false)),
-    LPBotCommand.of("quickstart", "A combination of /set and /start to instantly start a Listening Party without countdown", SlashCommandOption.create(SlashCommandOptionType.STRING, "url", "the URL to the Spotify playlist or album", true)),
+    LPBotCommand.of("set", "Set the target link", SlashCommandOption.createStringOption("url", "the URL to the Spotify playlist or album", true)),
+    LPBotCommand.of("start", "Start or resume the Listening Party", SlashCommandOption.createLongOption("countdown", "the seconds to count down, default: 5", false)),
+    LPBotCommand.of("quickstart", "A combination of /set and /start to instantly start a Listening Party without countdown", SlashCommandOption.createStringOption("url", "the URL to the Spotify playlist or album", true)),
     LPBotCommand.of("stop", "Cancel a current Listening Party and reset it to the beginning"),
-    LPBotCommand.of("skip", "Skip the current song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to skip, default: 1", false)),
-    LPBotCommand.of("previous", "Play the previous song in the Listening Party", SlashCommandOption.create(SlashCommandOptionType.LONG, "amount", "how many songs to go back, default: 1", false)),
+    LPBotCommand.of("skip", "Skip the current song in the Listening Party", SlashCommandOption.createLongOption("amount", "how many songs to skip, default: 1", false)),
+    LPBotCommand.of("previous", "Play the previous song in the Listening Party", SlashCommandOption.createLongOption("amount", "how many songs to go back, default: 1", false)),
     LPBotCommand.of("restart", "Restart the currently playing song"),
     LPBotCommand.of("pause", "Pause the current Listening Party (resume by typing /start again)"),
     LPBotCommand.of("np", "Print info of the current Listening Party for this channel (\"now playing\")"),
@@ -26,7 +25,8 @@ public class DiscordSlashCommands {
     LPBotCommand.of("help", "Print a basic tutorial of how the bot works"),
     LPBotCommand.of("commands", "Print all commands as a chat message"),
     LPBotCommand.of("custom", "[Experimental] Host a party custom-defined by the given attachment",
-      SlashCommandOption.create(SlashCommandOptionType.ATTACHMENT, "attachment", "the custom data", true),
+      SlashCommandOption.createAttachmentOption("attachment", "the custom data", true),
+      SlashCommandOption.createBooleanOption("shuffle", "shuffles the playlist beforehand", false),
       SlashCommandOption.createBooleanOption("guessing-game", "Enable a 30s guessing game before each track", false))
   );
 
@@ -37,41 +37,36 @@ public class DiscordSlashCommands {
   public static Set<SlashCommandBuilder> getSlashCommands() {
     Set<SlashCommandBuilder> builder = new HashSet<>();
     for (LPBotCommand command : DISCORD_SLASH_COMMANDS) {
-      builder.add(command.getSubCommand()
-        .map(subCommand -> {
-          Optional<SlashCommandOption> subCommand2 = command.getSubCommand2();
-          return SlashCommand.with(command.getCommand(), command.getDescription(), subCommand2.map(slashCommandOption -> List.of(subCommand, slashCommandOption)).orElseGet(() -> List.of(subCommand)));
-        })
-        .orElse(SlashCommand.with(command.getCommand(), command.getDescription())));
+      if (command.getSubCommands().isEmpty()) {
+        builder.add(SlashCommand.with(command.getCommand(), command.getDescription()));
+      } else {
+        List<SlashCommandOption> subCommands = command.getSubCommands();
+        builder.add(SlashCommand.with(command.getCommand(), command.getDescription(), subCommands));
+      }
     }
     return Set.copyOf(builder);
   }
 
+  @SuppressWarnings("SameParameterValue")
   public static class LPBotCommand {
     private final String command;
     private final String description;
-    private final SlashCommandOption subCommand;
-    private final SlashCommandOption subCommand2;
+    private final List<SlashCommandOption> subCommands;
 
     private Long id;
 
-    LPBotCommand(String command, String description, SlashCommandOption subCommand, SlashCommandOption subCommand2) {
+    LPBotCommand(String command, String description, SlashCommandOption... subCommands) {
       this.command = command;
       this.description = description;
-      this.subCommand = subCommand;
-      this.subCommand2 = subCommand2;
+      this.subCommands = List.of(subCommands);
     }
 
     private static LPBotCommand of(String command, String description) {
-      return new LPBotCommand(command, description, null, null);
+      return new LPBotCommand(command, description);
     }
 
-    private static LPBotCommand of(String command, String description, SlashCommandOption subCommand) {
-      return new LPBotCommand(command, description, subCommand, null);
-    }
-
-    private static LPBotCommand of(String command, String description, SlashCommandOption subCommand, SlashCommandOption subCommand2) {
-      return new LPBotCommand(command, description, subCommand, subCommand2);
+    private static LPBotCommand of(String command, String description, SlashCommandOption... subCommands) {
+      return new LPBotCommand(command, description, subCommands);
     }
 
     public String getCommand() {
@@ -82,24 +77,18 @@ public class DiscordSlashCommands {
       return description;
     }
 
-    public Optional<SlashCommandOption> getSubCommand() {
-      return Optional.ofNullable(subCommand);
-    }
-
-    public Optional<SlashCommandOption> getSubCommand2() {
-      return Optional.ofNullable(subCommand2);
+    public List<SlashCommandOption> getSubCommands() {
+      return subCommands;
     }
 
     public String getFullDescription() {
-      return getSubCommand()
-        .map(subCommand -> String.format("%s (`%s`: %s)", getDescription(), subCommand.getName(), subCommand.getDescription()))
-        .orElse(getDescription());
-    }
-
-    public String getCommandWithSubCommand() {
-      return getSubCommand()
-        .map(subCommand -> String.format("%s <%s>", getCommand(), subCommand.getName()))
-        .orElse(getCommand());
+      if (getSubCommands().isEmpty()) {
+        return getDescription();
+      }
+      String subCommandsDescription = getSubCommands().stream()
+        .map(subCommand -> String.format("`%s`: %s", subCommand.getName(), subCommand.getDescription()))
+        .collect(Collectors.joining(" // "));
+      return String.format("%s (%s)", getDescription(), subCommandsDescription);
     }
 
     public void setId(Long id) {
