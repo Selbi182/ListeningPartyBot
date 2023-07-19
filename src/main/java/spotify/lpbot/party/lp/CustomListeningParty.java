@@ -14,34 +14,34 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import spotify.lpbot.discord.util.DiscordUtils;
-import spotify.lpbot.party.data.TotwData;
+import spotify.lpbot.party.data.CustomLpData;
 import spotify.lpbot.party.data.lastfm.LastFmTrack;
 import spotify.lpbot.party.data.lastfm.LastFmUser;
-import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
+import spotify.lpbot.party.data.tracklist.CustomLpTrackListWrapper;
 import spotify.lpbot.party.lp.misc.FinalMessages;
 import spotify.lpbot.party.service.LastFmService;
 import spotify.util.SpotifyUtils;
 
-public class TotwListeningParty extends AbstractListeningParty {
-  private final TotwTrackListWrapper totwTrackListWrapper;
+public class CustomListeningParty extends AbstractListeningParty {
+  private final CustomLpTrackListWrapper customLpTrackListWrapper;
   private final LastFmService lastFmService;
   private final boolean guessingGame;
 
-  public TotwListeningParty(TextChannel channel, TotwTrackListWrapper totwTrackListWrapper, LastFmService lastFmService, FinalMessages finalMessages, boolean guessingGame) {
-    super(channel, totwTrackListWrapper, finalMessages);
-    this.totwTrackListWrapper = totwTrackListWrapper;
+  public CustomListeningParty(TextChannel channel, CustomLpTrackListWrapper customLpTrackListWrapper, LastFmService lastFmService, FinalMessages finalMessages, boolean guessingGame) {
+    super(channel, customLpTrackListWrapper, finalMessages);
+    this.customLpTrackListWrapper = customLpTrackListWrapper;
     this.lastFmService = lastFmService;
     this.guessingGame = guessingGame;
   }
 
-  private TotwData.Entry getCurrentTotwEntry() {
-    return totwTrackListWrapper.getTotwData().getTotwEntries().get(getCurrentTrackListIndex());
+  private CustomLpData.Entry getCurrentCustomLpEntry() {
+    return customLpTrackListWrapper.getCustomLpData().getCustomLpEntries().get(getCurrentTrackListIndex());
   }
 
   @Override
   protected EmbedBuilder createDiscordEmbedForTrack(Track track) {
     if (!guessingGame) {
-      return fullTotwEmbed(track);
+      return fullCustomLpEmbed(track);
     }
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
@@ -53,10 +53,10 @@ public class TotwListeningParty extends AbstractListeningParty {
     embed.setTitle(String.format("%s \u2013 %s", songArtists, songTitle));
 
     // Description
-    TotwData.Entry currentTotwEntry = getCurrentTotwEntry();
-    String realSubber = currentTotwEntry.getName();
+    CustomLpData.Entry currentCustomLpEntry = getCurrentCustomLpEntry();
+    String realSubber = currentCustomLpEntry.getName();
 
-    List<String> participants = new ArrayList<>(totwTrackListWrapper.getTotwData().getParticipants());
+    List<String> participants = new ArrayList<>(customLpTrackListWrapper.getCustomLpData().getParticipants());
     participants.remove(realSubber);
     Collections.shuffle(participants);
 
@@ -84,7 +84,7 @@ public class TotwListeningParty extends AbstractListeningParty {
 
     // Send full embed in 30 seconds
     getScheduledExecutorService().schedule(() -> {
-      getChannel().sendMessage(fullTotwEmbed(track));
+      getChannel().sendMessage(fullCustomLpEmbed(track));
     }, 30, TimeUnit.SECONDS);
 
     // Send off the embed to the Discord channel
@@ -101,21 +101,21 @@ public class TotwListeningParty extends AbstractListeningParty {
     guessingGameMessage.addReactions("\uD83C\uDDE6", "\uD83C\uDDE7", "\uD83C\uDDE8", "\uD83C\uDDE9");
   }
 
-  protected EmbedBuilder fullTotwEmbed(Track track) {
+  protected EmbedBuilder fullCustomLpEmbed(Track track) {
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
-    TotwData.Entry currentTotwEntry = getCurrentTotwEntry();
+    CustomLpData.Entry currentCustomLpEntry = getCurrentCustomLpEntry();
 
     // Upgrade last.fm data if possible
     try {
-      String lastFmName = currentTotwEntry.getLastFmName();
+      String lastFmName = currentCustomLpEntry.getLastFmName();
       LastFmUser lastFmUserInfo = lastFmService.getLastFmUserInfo(lastFmName);
       if (lastFmUserInfo != null) {
-        currentTotwEntry.attachUserInfo(lastFmUserInfo);
+        currentCustomLpEntry.attachUserInfo(lastFmUserInfo);
       }
       LastFmTrack lastFmTrack = lastFmService.getLastFmTrackInfo(track, lastFmName);
       if (lastFmTrack != null) {
-        currentTotwEntry.attachTrackInfo(lastFmTrack);
+        currentCustomLpEntry.attachTrackInfo(lastFmTrack);
       }
     } catch (RuntimeException e) {
       e.printStackTrace();
@@ -124,9 +124,9 @@ public class TotwListeningParty extends AbstractListeningParty {
     // (n/m) Subbed by: [entered name]
     // -> link to last.fm profile
     // -> with last.fm pfp
-    String subbedBy = currentTotwEntry.getName();
-    String lfmProfileLink = currentTotwEntry.getUserPageUrl();
-    String lfmProfilePicture = currentTotwEntry.getProfilePictureUrl();
+    String subbedBy = currentCustomLpEntry.getName();
+    String lfmProfileLink = currentCustomLpEntry.getUserPageUrl();
+    String lfmProfilePicture = currentCustomLpEntry.getProfilePictureUrl();
     String songOrdinal = getCurrentTrackNumber() + " / " + getTotalTrackCount();
     String authorHeadline = String.format("(%s) Submitted by: %s", songOrdinal, subbedBy);
     if (lfmProfileLink != null && lfmProfilePicture != null) {
@@ -141,7 +141,7 @@ public class TotwListeningParty extends AbstractListeningParty {
     String songTitle = track.getName();
     embed.setTitle(String.format("%s \u2013 %s", songArtists, songTitle));
 
-    String songLfmLink = currentTotwEntry.getSongLinkUrl();
+    String songLfmLink = currentCustomLpEntry.getSongLinkUrl();
     if (songLfmLink != null) {
       embed.setUrl(songLfmLink);
     }
@@ -149,15 +149,15 @@ public class TotwListeningParty extends AbstractListeningParty {
     // Description (song length + Write-up with fancy quotation marks and in cursive)
     String songLength = SpotifyUtils.formatTime(track.getDurationMs());
     String description = "**Song Length:** " + songLength;
-    if (!currentTotwEntry.getWriteUp().isBlank()) {
-      description += "\n\n" + DiscordUtils.formatDescription("Write-up", currentTotwEntry.getWriteUp());
+    if (!currentCustomLpEntry.getWriteUp().isBlank()) {
+      description += "\n\n" + DiscordUtils.formatDescription("Write-up", currentCustomLpEntry.getWriteUp());
     }
     embed.setDescription(description);
 
     // Scrobble info
-    Integer scrobbleCount = currentTotwEntry.getScrobbleCount();
-    Integer globalScrobbleCount = currentTotwEntry.getGlobalScrobbleCount();
-    if (currentTotwEntry.getScrobbleCount() != null && currentTotwEntry.getGlobalScrobbleCount() != null) {
+    Integer scrobbleCount = currentCustomLpEntry.getScrobbleCount();
+    Integer globalScrobbleCount = currentCustomLpEntry.getGlobalScrobbleCount();
+    if (currentCustomLpEntry.getScrobbleCount() != null && currentCustomLpEntry.getGlobalScrobbleCount() != null) {
       embed.addField(subbedBy + "\u2019s Scrobbles:", formatNumberWithCommas(scrobbleCount), true);
       embed.addField("Global Scrobbles:", formatNumberWithCommas(globalScrobbleCount), true);
     } else {

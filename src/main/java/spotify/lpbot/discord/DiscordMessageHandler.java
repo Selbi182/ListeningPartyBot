@@ -95,7 +95,7 @@ public class DiscordMessageHandler {
                   .ifPresent(attachment -> {
                     boolean guessingGame = slashCommandInteraction.getArgumentBooleanValueByName("guessing-game").orElse(false);
                     boolean shuffle = slashCommandInteraction.getArgumentBooleanValueByName("shuffle").orElse(false);
-                    lpChannelRegistry.registerTotw(channel, responder, attachment, guessingGame, shuffle);
+                    lpChannelRegistry.registerCustomLp(channel, responder, attachment, guessingGame, shuffle);
                   });
                 break;
               case "help":

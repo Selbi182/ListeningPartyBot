@@ -22,25 +22,25 @@ import se.michaelthelin.spotify.model_objects.specification.AlbumSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Playlist;
 import se.michaelthelin.spotify.model_objects.specification.PlaylistSimplified;
 import se.michaelthelin.spotify.model_objects.specification.Track;
-import spotify.lpbot.party.data.TotwData;
+import spotify.lpbot.party.data.CustomLpData;
 import spotify.lpbot.party.data.color.ColorService;
-import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
+import spotify.lpbot.party.data.tracklist.CustomLpTrackListWrapper;
 import spotify.services.PlaylistService;
 import spotify.util.SpotifyUtils;
 
 @Service
-public class TotwCreationService {
+public class CustomLpCreationService {
   private static final int MAX_ATTACHMENT_SIZE_IN_BYTES = 50 * 1024;
 
   private final PlaylistService playlistService;
   private final ColorService colorService;
 
-  TotwCreationService(PlaylistService playlistService, ColorService colorService) {
+  CustomLpCreationService(PlaylistService playlistService, ColorService colorService) {
     this.playlistService = playlistService;
     this.colorService = colorService;
   }
 
-  public TotwData parseAttachmentFile(Attachment attachment) throws IOException {
+  public CustomLpData parseAttachmentFile(Attachment attachment) throws IOException {
     if (attachment.getSize() > MAX_ATTACHMENT_SIZE_IN_BYTES) {
       throw new IllegalArgumentException("File is too big");
     }
@@ -51,39 +51,39 @@ public class TotwCreationService {
     String headline = json.get("title").getAsString();
     JsonArray jsonSubmissions = json.get("submissions").getAsJsonArray();
 
-    List<TotwData.Entry> partialSubmissions = new ArrayList<>();
+    List<CustomLpData.Entry> partialSubmissions = new ArrayList<>();
     for (JsonElement element : jsonSubmissions) {
       JsonObject entry = element.getAsJsonObject();
       String name = entry.get("name").getAsString().trim();
       String lastFmName = entry.get("lastFmName").getAsString().trim();
       String link = entry.get("link").getAsString().trim();
       String writeUp = entry.get("writeUp").getAsString().replaceAll("\\n", "\n").trim();
-      TotwData.Entry totwEntry = new TotwData.Entry(name, lastFmName, link, writeUp);
-      partialSubmissions.add(totwEntry);
+      CustomLpData.Entry customLpDataEntry = new CustomLpData.Entry(name, lastFmName, link, writeUp);
+      partialSubmissions.add(customLpDataEntry);
     }
 
-    return new TotwData(headline, partialSubmissions);
+    return new CustomLpData(headline, partialSubmissions);
   }
 
-  public TotwTrackListWrapper findOrCreateTotwPlaylist(TotwData totwData) {
+  public CustomLpTrackListWrapper findOrCreateCustomLpPlaylist(CustomLpData customLpData) {
     // Check if a playlist already exists
     List<PlaylistSimplified> userPlaylists = playlistService.getCurrentUsersPlaylists();
-    Optional<PlaylistSimplified> previousTotwPlaylist = userPlaylists.stream()
-        .filter(p -> p.getName().equals(totwData.getHeadline()))
+    Optional<PlaylistSimplified> previousCustomLpPlaylist = userPlaylists.stream()
+        .filter(p -> p.getName().equals(customLpData.getHeadline()))
         .findFirst();
 
     // If it doesn't exist, create it. If it does, clear it
     Playlist playlist;
-    if (previousTotwPlaylist.isEmpty()) {
-      playlist = playlistService.createPlaylist(totwData.getHeadline(), null, true);
+    if (previousCustomLpPlaylist.isEmpty()) {
+      playlist = playlistService.createPlaylist(customLpData.getHeadline(), null, true);
     } else {
-      playlist = playlistService.upgradePlaylistSimplified(previousTotwPlaylist.get());
+      playlist = playlistService.upgradePlaylistSimplified(previousCustomLpPlaylist.get());
       playlistService.clearPlaylist(playlist);
     }
 
     // Fill playlist with songs
-    List<String> songIds = totwData.getTotwEntries().stream()
-        .map(TotwData.Entry::getSpotifyLink)
+    List<String> songIds = customLpData.getCustomLpEntries().stream()
+        .map(CustomLpData.Entry::getSpotifyLink)
         .map(link -> {
           try {
             if (SpotifyUtils.isShortSpotifyUrl(link)) {
@@ -111,6 +111,6 @@ public class TotwCreationService {
         .map(ColorFetchResult::getPrimary)
         .collect(Collectors.toList());
 
-    return new TotwTrackListWrapper(playlist, allPlaylistTracks, colors, totwData);
+    return new CustomLpTrackListWrapper(playlist, allPlaylistTracks, colors, customLpData);
   }
 }

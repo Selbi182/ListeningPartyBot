@@ -42,7 +42,6 @@ templates/READY
 spotifybot.properties
 log.txt
 config/discord_token.txt
-totwdata.txt
 config/lastfm_token.txt
 deploy.sh
 config/

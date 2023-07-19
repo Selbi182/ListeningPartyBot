@@ -13,31 +13,31 @@ import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.springframework.stereotype.Service;
 
 import spotify.lpbot.discord.util.DiscordUtils;
-import spotify.lpbot.party.data.TotwData;
-import spotify.lpbot.party.data.tracklist.TotwTrackListWrapper;
+import spotify.lpbot.party.data.CustomLpData;
+import spotify.lpbot.party.data.tracklist.CustomLpTrackListWrapper;
 import spotify.lpbot.party.data.tracklist.TrackListWrapper;
 import spotify.lpbot.party.lp.AbstractListeningParty;
 import spotify.lpbot.party.lp.StandardListeningParty;
-import spotify.lpbot.party.lp.TotwListeningParty;
+import spotify.lpbot.party.lp.CustomListeningParty;
 import spotify.lpbot.party.lp.misc.FinalMessages;
 import spotify.lpbot.party.lp.misc.LpUtils;
 import spotify.lpbot.party.service.LastFmService;
-import spotify.lpbot.party.service.TotwCreationService;
+import spotify.lpbot.party.service.CustomLpCreationService;
 import spotify.lpbot.party.service.TrackListCreationService;
 
 @Service
 public class ChannelRegistry {
   private final TrackListCreationService trackListCreationService;
-  private final TotwCreationService totwPlaylistService;
+  private final CustomLpCreationService customLpPlaylistService;
   private final LastFmService lastFmService;
   private final FinalMessages finalMessages;
   private final Logger logger;
 
   private final Map<Long, AbstractListeningParty> lpInstancesForChannelId;
 
-  ChannelRegistry(TrackListCreationService trackListCreationService, TotwCreationService totwPlaylistService, LastFmService lastFmService, FinalMessages finalMessages) {
+  ChannelRegistry(TrackListCreationService trackListCreationService, CustomLpCreationService customLpPlaylistService, LastFmService lastFmService, FinalMessages finalMessages) {
     this.trackListCreationService = trackListCreationService;
-    this.totwPlaylistService = totwPlaylistService;
+    this.customLpPlaylistService = customLpPlaylistService;
     this.lastFmService = lastFmService;
     this.finalMessages = finalMessages;
     this.logger = Logger.getLogger(ChannelRegistry.class.getName());
@@ -78,18 +78,18 @@ public class ChannelRegistry {
     return null;
   }
 
-  public void registerTotw(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment totwData, boolean guessingGame, boolean shuffle) {
+  public void registerCustomLp(TextChannel channel, InteractionOriginalResponseUpdater responder, Attachment customLpData, boolean guessingGame, boolean shuffle) {
     if (!isRegistered(channel) || lpInstancesForChannelId.get(channel.getId()).isReplaceable()) {
       try {
-        TotwData parsedTotwData = totwPlaylistService.parseAttachmentFile(totwData);
+        CustomLpData parsedCustomLpData = customLpPlaylistService.parseAttachmentFile(customLpData);
         if (shuffle) {
-          parsedTotwData.shuffle();
+          parsedCustomLpData.shuffle();
         }
-        TotwTrackListWrapper totwTrackListWrapper = totwPlaylistService.findOrCreateTotwPlaylist(parsedTotwData);
-        TotwListeningParty totwParty = new TotwListeningParty(channel, totwTrackListWrapper, lastFmService, finalMessages, guessingGame);
-        lpInstancesForChannelId.put(channel.getId(), totwParty);
+        CustomLpTrackListWrapper customLpTrackListWrapper = customLpPlaylistService.findOrCreateCustomLpPlaylist(parsedCustomLpData);
+        CustomListeningParty customListeningParty = new CustomListeningParty(channel, customLpTrackListWrapper, lastFmService, finalMessages, guessingGame);
+        lpInstancesForChannelId.put(channel.getId(), customListeningParty);
 
-        String participants = String.join(", ", parsedTotwData.getParticipants());
+        String participants = String.join(", ", parsedCustomLpData.getParticipants());
         String customLpInfoEmbed = "Custom party is set! Use " + DiscordUtils.findClickableCommand("start") + " to begin the listening party."
           + "\n\n**Participants (click to reveal names):**\n||" + participants + "||";
 
@@ -106,7 +106,7 @@ public class ChannelRegistry {
 
         DiscordUtils.updateWithSimpleEmbed(responder, customLpInfoEmbed);
 
-        DiscordUtils.sendSimpleMessage(channel, "**Link:** " + totwTrackListWrapper.getLink());
+        DiscordUtils.sendSimpleMessage(channel, "**Link:** " + customLpTrackListWrapper.getLink());
 
         LpUtils.logLpEvent(channel, logger, "New custom LP set up");
       } catch (IOException e) {

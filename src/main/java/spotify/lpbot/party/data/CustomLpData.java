@@ -9,13 +9,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import spotify.lpbot.party.data.lastfm.LastFmTrack;
 import spotify.lpbot.party.data.lastfm.LastFmUser;
 
-public class TotwData {
+public class CustomLpData {
   private final String headline;
-  private final List<TotwData.Entry> totwEntries;
+  private final List<CustomLpData.Entry> customLpEntries;
 
-  public TotwData(String headline, List<TotwData.Entry> totwEntries) {
+  public CustomLpData(String headline, List<CustomLpData.Entry> customLpEntries) {
     this.headline = headline;
-    this.totwEntries = totwEntries;
+    this.customLpEntries = customLpEntries;
   }
 
   public String getHeadline() {
@@ -23,18 +23,18 @@ public class TotwData {
   }
 
   public List<String> getParticipants() {
-    return totwEntries.stream()
+    return customLpEntries.stream()
       .map(Entry::getName)
       .distinct()
       .collect(Collectors.toList());
   }
 
-  public List<TotwData.Entry> getTotwEntries() {
-    return totwEntries;
+  public List<CustomLpData.Entry> getCustomLpEntries() {
+    return customLpEntries;
   }
 
   public void shuffle() {
-    Collections.shuffle(totwEntries);
+    Collections.shuffle(customLpEntries);
   }
 
   public static class Entry {
