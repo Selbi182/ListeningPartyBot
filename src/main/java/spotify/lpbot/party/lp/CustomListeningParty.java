@@ -23,6 +23,8 @@ import spotify.lpbot.party.service.LastFmService;
 import spotify.util.SpotifyUtils;
 
 public class CustomListeningParty extends AbstractListeningParty {
+  private static final int REVEAL_DELAY_SECONDS = 45;
+
   private final CustomLpTrackListWrapper customLpTrackListWrapper;
   private final LastFmService lastFmService;
   private final boolean guessingGame;
@@ -40,9 +42,10 @@ public class CustomListeningParty extends AbstractListeningParty {
 
   @Override
   protected EmbedBuilder createDiscordEmbedForTrack(Track track) {
-    if (!guessingGame) {
+    if (!guessingGame || track.getDurationMs() / 1000 <= REVEAL_DELAY_SECONDS) {
       return fullCustomLpEmbed(track);
     }
+
     // Prepare a new Discord embed
     EmbedBuilder embed = new EmbedBuilder();
 
@@ -80,12 +83,12 @@ public class CustomListeningParty extends AbstractListeningParty {
     embed.setColor(embedColor);
 
     // Footer
-    embed.setFooter("Answer gets revealed in 30 seconds...");
+    embed.setFooter("Answer gets revealed in " + REVEAL_DELAY_SECONDS + " seconds...");
 
-    // Send full embed in 30 seconds
+    // Send full embed in REVEAL_DELAY_SECONDS seconds
     getScheduledExecutorService().schedule(() -> {
       getChannel().sendMessage(fullCustomLpEmbed(track));
-    }, 30, TimeUnit.SECONDS);
+    }, REVEAL_DELAY_SECONDS, TimeUnit.SECONDS);
 
     // Send off the embed to the Discord channel
     return embed;
